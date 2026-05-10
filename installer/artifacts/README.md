@@ -390,9 +390,14 @@ Shows: ahead/behind counts, which registry blueprints are newer than your local 
 
 Your pantheon was bootstrapped at a specific kernel version (recorded in `.pantheon-kernel-version` at the workspace root). When the kernel author publishes a new version with new rules, new shared/ structure, new policy rows, etc., you can pull those changes in **per-entry, with confirmation** — never wholesale, never automatic.
 
-```
-main, check kernel updates
-```
+Two slash commands:
+
+| Command | What it does | Hat |
+|---|---|---|
+| `/update-status` | Fetch CHANGELOG and show summary of what's pending. **Read-only — does not apply anything.** | Operating OK |
+| `/update` | Full interactive walkthrough — apply per entry with confirm. | Design hat |
+
+Conversational equivalents: `main, kernel update status` / `main, check kernel updates`.
 
 What main does:
 

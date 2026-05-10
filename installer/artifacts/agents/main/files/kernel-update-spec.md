@@ -136,8 +136,13 @@ If a CHANGELOG entry attempts to touch any of the above paths, REFUSE the entry 
    ```
 5. Append summary entry to own MEMORY (`patched kernel 0.2.0 → 0.4.0`).
 
-## 9. Aux operations
+## 9. Aux operations & slash commands
 
+**Slash commands (Skill 13 entry points):**
+- **`/update-status`** ≡ "main, kernel update status" — fetch + summarize, **read-only**. No walkthrough, no apply prompts. Operating hat OK.
+- **`/update`** ≡ "main, check kernel updates" — full interactive walkthrough + apply. Design hat required.
+
+**Conversational aux:**
 - **`main, kernel version`** — print current `.pantheon-kernel-version` contents.
 - **`main, kernel skip list`** — list `skipped_entries` with reasons; offer to revisit each.
 - **`main, kernel changelog [<version>]`** — fetch and show CHANGELOG (or one version block) without applying.

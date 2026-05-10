@@ -341,20 +341,36 @@ shared/imported-agent-blueprint/<handle>.blueprint.md
 
 **Privacy contract** (registry spec §9): scan every push; main never handles Git credentials.
 
-### Skill 13: `manage_kernel_updates` (Design hat only)
+### Skill 13: `manage_kernel_updates`
 **Purpose:** discover and apply kernel updates published in the kernel repo's `CHANGELOG.md`. Per-entry, root-confirmed, semver-ordered. Never auto-fetches, never auto-applies.
 
 **Spec reference:** `agents/main/files/kernel-update-spec.md` (KUS).
 
-**Hat gate:** Design hat ONLY. Refuse in Operating: *"Kernel updates are system changes — switch to Design hat first."*
-
-**Triggers (conversational):**
-- "main, check kernel updates" / "main, อัปเดต kernel" / "main, ดู patch ใหม่"
+**Triggers:**
+- `/update-status` ≡ "main, kernel update status" — fetch + summarize, **no walkthrough, no apply** (L1)
+- `/update` ≡ "main, check kernel updates" / "main, อัปเดต kernel" / "main, ดู patch ใหม่" — full interactive flow (L3 per entry, Design hat required)
 - "main, kernel version" — print `.pantheon-kernel-version`
 - "main, kernel skip list" — review skipped entries
 - "main, kernel changelog [`<version>`]" — fetch and show without applying
 
-**Sub-flow A — Check & apply** (KUS §4-§8):
+**Sub-flow A — Status (read-only):**
+1. Read `.pantheon-kernel-version`.
+2. Fetch `CHANGELOG.md` from `kernel_repo`. Update `last_patch_check`.
+3. Parse versions newer than `kernel_version`. Filter out `entry_id`s already in `skipped_entries`.
+4. Report compact summary (no walkthrough, no prompts to apply):
+   ```
+   Current: <version>  (installed <date>, last checked <ISO>)
+   Latest:  <latest>
+   Pending: <N> versions, <M> entries (<tag counts>)
+   Skipped before: <K> entries
+   
+   Run /update to walk through and apply.
+   ```
+5. Append entry to own MEMORY (`kernel update status checked → <N> pending`).
+
+**Hat gate:** Operating hat OK for Sub-flow A (read-only). Design hat required for Sub-flow B.
+
+**Sub-flow B — Check & apply** (KUS §4-§8):
 1. Read `.pantheon-kernel-version`. If missing, refuse and tell root to run `main, kernel version --init` (or fix manually).
 2. Fetch `CHANGELOG.md` from `kernel_repo` (raw URL; e.g., `raw.githubusercontent.com/<owner>/<repo>/main/CHANGELOG.md`). Update `last_patch_check` immediately.
 3. Parse versions newer than `kernel_version` (semver). Within each block, parse `### [TAG] <scope>` entries. Filter out entries whose `entry_id` is in `skipped_entries`.
@@ -370,7 +386,7 @@ shared/imported-agent-blueprint/<handle>.blueprint.md
 6. Apply confirmed entries. Bump `kernel_version`. Append to `applied_patches`. Append skips to `skipped_entries` (with reason + timestamp).
 7. Report final summary (applied / skipped / manual-needed). Append entry to own MEMORY.
 
-**Sub-flow B — Aux ops** (KUS §9): version dump / skip list / changelog preview — all L1 read-only.
+**Sub-flow C — Aux ops** (KUS §9): version dump / skip list / changelog preview — all L1 read-only. Operating hat OK.
 
 **Hard refuses** (KUS §7) — KUS NEVER touches:
 - Any `MEMORY.md` (main's or any agent's)
@@ -384,7 +400,7 @@ If a CHANGELOG entry attempts any of the above, REFUSE that entry, surface to ro
 
 **Failure modes** (KUS §11): network down → abort + retry later; CHANGELOG malformed → surface parse error; kernel_repo URL invalid → tell root to fix; merge conflicts >10 → skip + manual edit.
 
-**Sheridan level:** L2 for fetch + summarize. **L3 per entry application** (each entry is its own confirm). L1 for read-only aux ops.
+**Sheridan levels:** Sub-flow A status = L1 (read-only network + bookkeeping). Sub-flow B = L2 for fetch + summarize, **L3 per entry application** (each entry is its own confirm). Sub-flow C aux ops = L1.
 
 ## 3. Standard Operating Procedure (SOP)
 
