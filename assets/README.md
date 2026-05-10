@@ -4,6 +4,7 @@
 
 - `pantheon-logo.svg` - horizontal logo for README headers, decks, and documentation.
 - `pantheon-mark.svg` - square mark for icons, avatars, favicons, and social previews.
+- `pantheon-mark.txt` - plain ASCII mark for CLI banners and terminal output.
 
 ## Concept
 
