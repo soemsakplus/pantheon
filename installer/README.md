@@ -33,7 +33,7 @@ To test in a clean repo:
 1. Copy this entire `pantheon/` directory to a new location (e.g. `/tmp/pantheon-test`).
 2. Confirm only these exist at root: `PANTHEON-INSTALL.md`, `CLAUDE.md`, `installer/`. (No `agents/`, `shared/`, `.claude/` should be present yet.)
 3. `cd` into the new location and open Claude Code.
-4. Type **anything** (e.g. `hi`, `start`, or just `.`) to send the first message — Claude Code only responds after a user message. The installer treats the first message as a trigger, ignores its content, and immediately greets in EN+TH and asks Q1.
+4. Type exactly `pantheon install` to start the installer — that is the only trigger. Claude responds with the bilingual EN+TH greeting and asks Q1. Any other first message keeps Claude in kernel-author mode (regular assistant on the installer codebase), so contributors can edit installer files without triggering a fresh install. Worth testing both paths.
 5. Answer the 4 questions. Confirm the summary.
 6. Watch Claude `cp` artifacts → inject placeholders → delete `installer/` → enter Design hat and self-introduce.
 

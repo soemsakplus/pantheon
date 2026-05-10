@@ -5,9 +5,11 @@
 
 ## Phase 1 — Greet & ask Q1
 
-**Trigger:** the user's very first message in the session, regardless of content. Do not respond to that message's content — treat it as the install trigger only.
+**Trigger (exact, case-insensitive):** `pantheon install`
 
-In your first response:
+If the user types anything else, do NOT enter install flow — defer to root `CLAUDE.md` "Start ONLY on the explicit install trigger" section (kernel-author mode).
+
+When the trigger fires, in your first response:
 1. Greet briefly in **both English and Thai** (1-2 lines each):
    - Identify as "Pantheon installer"
    - Mention: 4 short questions, then automatic system build

@@ -120,9 +120,15 @@ claude
 
 Claude Code auto-loads [CLAUDE.md](CLAUDE.md), which tells the assistant it's running the Pantheon installer.
 
-### 3. Say hi
+### 3. Type the install trigger
 
-Type **anything** — `hi`, `start`, `.`, anything. Claude Code only responds after a user message, so you need to send one to kick things off. The installer ignores the **content** of your first message and treats it purely as a trigger.
+Type exactly:
+
+```
+pantheon install
+```
+
+Only this phrase starts the installer. Any other message lets Claude Code work as a **regular assistant on the kernel codebase** (useful if you're customizing the installer itself — the kernel author is neither in main's Operating nor Design hat, since those don't exist until after install).
 
 ### 4. Answer 4 questions
 
@@ -246,7 +252,7 @@ cd /tmp/pantheon-test
 claude
 ```
 
-Type `hi`, run through all 4 questions in both Thai and English (try Thai once, English once), confirm install completes, verify `installer/` is gone, verify Design hat self-introduction works.
+Type `pantheon install`, run through all 4 questions in both Thai and English (try Thai once, English once), confirm install completes, verify `installer/` is gone, verify Design hat self-introduction works. Also test that typing something else first (e.g. `hello`) keeps Claude in kernel-author mode without triggering the install.
 
 ### Style
 

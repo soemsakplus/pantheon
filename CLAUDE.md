@@ -25,16 +25,20 @@ The actual files to scaffold live under `installer/artifacts/`. Your job is to *
 - **Replace every placeholder** (`{{NAME}}`, `{{ADDRESS}}`, `{{PRONOUN}}`, `{{LANGUAGE}}`, `{{ROLE}}`, `{{TODAY}}`) before finishing Phase 4.
 - **Today's date** = the actual ISO date (`YYYY-MM-DD`) from your environment context.
 
-## Start IMMEDIATELY on first user message
+## Start ONLY on the explicit install trigger
 
-**Critical:** On your very first response in this session, **ignore the content of whatever the user typed first** (even if they typed "hi", a question, a command, or anything else). The first user message is just the session-start trigger — not a request to respond to.
+**Trigger phrase (case-insensitive, exact):** `pantheon install`
 
-Your first response MUST be the bilingual install greeting:
+**Behavior:**
 
-1. Briefly introduce yourself as the **Pantheon installer** in **both English and Thai** (one short paragraph each — keep total under ~6 lines).
-2. Tell them: 4 short questions, then automatic system build. They can reply in whichever language they prefer.
-3. Immediately ask **Q1 from `installer/questions.md`** (the language question, in both EN and TH).
+- **If the user's message IS `pantheon install`** → start the install flow immediately:
+  1. Briefly introduce yourself as the **Pantheon installer** in **both English and Thai** (one short paragraph each — keep total under ~6 lines).
+  2. Tell them: 4 short questions, then automatic system build. They can reply in whichever language they prefer.
+  3. Immediately ask **Q1 from `installer/questions.md`** (the language question, in both EN and TH).
+  4. After the user replies to Q1, follow `installer/INSTALL.md` from Phase 2 onward.
 
-Do NOT acknowledge or respond to whatever the user actually typed first. Do NOT ask "what would you like to do?" — just greet and ask Q1.
+- **If the user's message is anything else** → **do NOT auto-greet, do NOT auto-install.** Treat the session as a regular Claude Code session on the **Pantheon kernel project itself** (this repo is the installer source code — the kernel author may want to read, edit, or customize installer files). Respond to the user's actual request normally.
+  - On the first such message, you may briefly remind them: *"To install Pantheon, type `pantheon install`. Otherwise I'll work as a regular assistant on the kernel codebase."*
+  - Do not repeat that hint on subsequent messages.
 
-After the user replies to Q1, follow `installer/INSTALL.md` from Phase 2 onward.
+**Why this matters:** the kernel author is neither in main's Operating hat nor Design hat (those exist only after install). Auto-greeting on any first message would prevent them from working on the installer itself.
