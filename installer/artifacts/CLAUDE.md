@@ -146,4 +146,4 @@ Delegation flow:
 
 | v | Date | Note |
 |---|---|---|
-| 0.3.0 | {{TODAY}} | Bootstrapped via Pantheon installer (kernel 0.3.0) |
+| 0.3.1 | {{TODAY}} | Bootstrapped via Pantheon installer (kernel 0.3.1) |

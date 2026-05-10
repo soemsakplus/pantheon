@@ -453,4 +453,4 @@ If a CHANGELOG entry attempts any of the above, REFUSE that entry, surface to ro
 
 | v | Date | Note |
 |---|---|---|
-| 0.3.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.3.0 |
+| 0.3.1 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.3.1 |

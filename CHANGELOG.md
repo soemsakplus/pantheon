@@ -29,6 +29,26 @@ Semver. Bump kernel version in `installer/artifacts/CLAUDE.md` §9, root
 
 ---
 
+## 0.3.1 — 2026-05-10
+
+Patch — fixes from the MVP completeness audit.
+
+### [NEW-FILE] installer/artifacts/shared/assets/.gitkeep
+
+Adds `.gitkeep` to the binary asset drop folder, consistent with the
+pattern already used by `shared/import/` and `shared/truth/sources/`.
+
+### [EDIT-SECTION] installer/INSTALL.md §Phase 5
+
+Expands the post-install state tree to show the complete expected
+repo layout: `.pantheon-kernel-version`, all 13 slash commands,
+`agents/main/files/` spec docs, and the full `shared/` subfolder
+structure (`truth/`, `import/`, `assets/`, `imported-agent-blueprint/`).
+
+### [MIGRATION] None required
+
+---
+
 ## 0.3.0 — 2026-05-10
 
 KUS (Kernel Update System) ships. Installed pantheons can now patch toward future kernel versions via `/update-status` and `/update`.

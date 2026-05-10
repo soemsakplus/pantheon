@@ -15,7 +15,7 @@ This folder is the first-time installer for Pantheon. It is **deleted automatica
 
 Earlier kernel versions had Claude **generate** scaffolded files from a single fenced spec. That was fragile: weaker models drifted, summarized, or dropped fences.
 
-Kernel 0.3.0 splits install into:
+Kernel 0.3.1 splits install into:
 
 1. **Orchestration** (`INSTALL.md`) — small, prescriptive, mostly control flow
 2. **Artifacts** (`artifacts/`) — exact files to **copy verbatim**, with `{{PLACEHOLDER}}` tokens replaced by collected user data

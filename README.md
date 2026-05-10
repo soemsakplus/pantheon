@@ -268,7 +268,7 @@ Type `pantheon install`, run through all 4 questions in both Thai and English (t
 
 ## Version
 
-**Current kernel:** 0.3.0 (2026-05-10)
+**Current kernel:** 0.3.1 (2026-05-10)
 
 See [PANTHEON-INSTALL.md §17](PANTHEON-INSTALL.md) for the full version log.
 

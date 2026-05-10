@@ -117,11 +117,11 @@ Create `.pantheon-kernel-version` at repo root with this content (substitute `{{
 
 ```json
 {
-  "kernel_version": "0.3.0",
+  "kernel_version": "0.3.1",
   "kernel_repo": "https://github.com/soemsakplus/pantheon",
   "installed_at": "{{TODAY}}T00:00:00Z",
   "last_patch_check": null,
-  "applied_patches": ["0.3.0"],
+  "applied_patches": ["0.3.1"],
   "skipped_entries": []
 }
 ```
@@ -130,7 +130,7 @@ This file lets `main` (Skill 13 `manage_kernel_updates`) discover newer kernel v
 
 **If the user cloned from a fork** rather than the canonical repo, prompt them: *"Did you clone from `https://github.com/soemsakplus/pantheon`? If you cloned from a fork, edit `.pantheon-kernel-version` and set `kernel_repo` to your fork URL."* — and proceed with the canonical URL as the default.
 
-**Kernel author note:** when releasing a new kernel version, bump the literal `0.3.0` above (and in the version footers in `installer/artifacts/CLAUDE.md` §9, all `agents/main/{AGENT,SKILL,POLICY,MEMORY}.md` §Version tables, and root `README.md` "Current kernel" line). Add the new version block to root `CHANGELOG.md` per its strict format (see CHANGELOG header).
+**Kernel author note:** when releasing a new kernel version, bump the literal `0.3.1` above (and in the version footers in `installer/artifacts/CLAUDE.md` §9, all `agents/main/{AGENT,SKILL,POLICY,MEMORY}.md` §Version tables, and root `README.md` "Current kernel" line). Add the new version block to root `CHANGELOG.md` per its strict format (see CHANGELOG header).
 
 ## Phase 5 — Cleanup
 
