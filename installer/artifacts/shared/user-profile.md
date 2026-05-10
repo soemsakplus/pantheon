@@ -55,4 +55,4 @@
 
 | v | Date | Note |
 |---|---|---|
-| 0.2.0 | {{TODAY}} | Initial profile (collected via Pantheon installer) |
+| 0.3.0 | {{TODAY}} | Initial profile (collected via Pantheon installer) |

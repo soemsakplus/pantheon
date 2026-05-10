@@ -3,9 +3,9 @@
 > **Concept and architecture reference.**
 > For installation, see `/installer`. For day-to-day usage after install, see `CLAUDE.md`.
 
-**Version:** kernel-0.2.0
+**Version:** kernel-0.3.0
 **License:** MIT (suggested — adjust for your use)
-**Lineage:** evolved from `dvm-workspace` v0.22 (extracted 2026-05-09 as kernel-0.1.0, refactored 2026-05-10 as kernel-0.2.0).
+**Lineage:** evolved from `dvm-workspace` v0.22 (extracted 2026-05-09 as kernel-0.1.0, refactored 2026-05-10 as kernel-0.2.0, KUS shipped 2026-05-10 as kernel-0.3.0).
 
 ---
 
@@ -259,3 +259,4 @@ These are deliberately omitted to keep the kernel **lean and portable**.
 | 0.1.0 | 2026-05-09 | Initial kernel — extracted from `dvm-workspace` v0.22. Single-file install spec with embedded fenced blocks. |
 | 0.1.1 | 2026-05-10 | Mode trigger semantic fix: swap `main start` (Operating) ↔ `root start` (Design). |
 | 0.2.0 | 2026-05-10 | **Major refactor.** Concept: root is always the human, never an AI persona; main has two hats (Operating/Design). Communication: deprecated file inbox/outbox; all inter-agent work via Task tool. Install: split into orchestration (`installer/INSTALL.md`) + literal artifacts (`installer/artifacts/`) for deterministic, weak-model-safe install. New slash commands: `/main`, `/design`, `/operate`, `/connect`. PANTHEON-INSTALL.md role changed: from scaffolding spec to concept reference. |
+| 0.3.0 | 2026-05-10 | **KUS (Kernel Update System) ships.** Added: Skill 13 `manage_kernel_updates` + `/update-status` + `/update` slash commands, root `CHANGELOG.md` with strict tag format, `kernel-update-spec.md`, `.pantheon-kernel-version` workspace state file. Also bundled (post-0.2.0 work documented as part of this release): M1-M13 protocol tightening, shared knowledge layer (Tier 0/1, `truth/`, `import/`, `assets/`), Blueprint Lineage System (BLS), blueprint registry MVP. First version with patchable upgrades — future releases (0.4.0+) reachable via `/update` from any 0.3.0+ install. |

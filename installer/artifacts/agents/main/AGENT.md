@@ -103,4 +103,4 @@ I am NEVER root. Root is {{ADDRESS}} — the human at the keyboard.
 
 | v | Date | Note |
 |---|---|---|
-| 0.2.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.2.0 |
+| 0.3.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.3.0 |

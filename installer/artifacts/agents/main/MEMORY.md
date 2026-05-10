@@ -6,7 +6,7 @@ Experience layer. AGENT=identity, SKILL=tools, POLICY=permissions.
 ## 1. Recent activity log
 > Newest → oldest. Format: `- [YYYY-MM-DD] action → outcome`
 
-- [{{TODAY}}] Bootstrap — installed via Pantheon installer (kernel 0.2.0). Profile collected from {{ADDRESS}}.
+- [{{TODAY}}] Bootstrap — installed via Pantheon installer (kernel 0.3.0). Profile collected from {{ADDRESS}}.
 
 ## 2. Key decisions
 > *Never compact this section.*
@@ -69,4 +69,4 @@ Experience layer. AGENT=identity, SKILL=tools, POLICY=permissions.
 
 | v | Date | Note |
 |---|---|---|
-| 0.2.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.2.0 |
+| 0.3.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.3.0 |

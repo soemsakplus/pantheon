@@ -214,7 +214,7 @@ On `main start`, if `agents/main/files/.direct-mode-state.json` exists with `sta
 
 | v | Date | Note |
 |---|---|---|
-| 0.2.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.2.0 |
+| 0.3.0 | {{TODAY}} | Bootstrapped from Pantheon kernel 0.3.0 |
 
 ## References
 - Sheridan 1992 — *Telerobotics, Automation, and Human Supervisory Control*. MIT Press.

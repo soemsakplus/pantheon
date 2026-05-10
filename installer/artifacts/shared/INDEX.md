@@ -47,4 +47,4 @@ When unsure: **"does another agent need this?"** — yes = `shared/`, no = `MEMO
 
 | v | Date | Note |
 |---|---|---|
-| 0.1.0 | {{TODAY}} | Initial catalog (Pantheon kernel 0.2.0) |
+| 0.1.0 | {{TODAY}} | Initial catalog (Pantheon kernel 0.3.0) |

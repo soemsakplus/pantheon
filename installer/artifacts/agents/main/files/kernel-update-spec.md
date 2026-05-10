@@ -14,11 +14,11 @@ Path: workspace root. JSON.
 
 ```json
 {
-  "kernel_version": "0.2.0",
+  "kernel_version": "0.3.0",
   "kernel_repo": "https://github.com/soemsakplus/pantheon",
   "installed_at": "2026-05-10T08:00:00Z",
   "last_patch_check": null,
-  "applied_patches": ["0.2.0"],
+  "applied_patches": ["0.3.0"],
   "skipped_entries": []
 }
 ```
@@ -129,12 +129,12 @@ If a CHANGELOG entry attempts to touch any of the above paths, REFUSE the entry 
 3. Move to the next pending version (apply in order — oldest first).
 4. After all pending versions processed, report:
    ```
-   Kernel updated: 0.2.0 → 0.4.0
+   Kernel updated: 0.3.0 → 0.4.0
    Applied: 12 entries
    Skipped: 2 entries (review with `main, kernel skip list`)
    Manual edits required: 1 entry — see notes
    ```
-5. Append summary entry to own MEMORY (`patched kernel 0.2.0 → 0.4.0`).
+5. Append summary entry to own MEMORY (`patched kernel 0.3.0 → 0.4.0`).
 
 ## 9. Aux operations & slash commands
 

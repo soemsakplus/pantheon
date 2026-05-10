@@ -29,6 +29,69 @@ Semver. Bump kernel version in `installer/artifacts/CLAUDE.md` §9, root
 
 ---
 
+## 0.3.0 — 2026-05-10
+
+KUS (Kernel Update System) ships. Installed pantheons can now patch toward future kernel versions via `/update-status` and `/update`.
+
+### [META] First version with patchable upgrades
+
+Pantheons installed at **0.2.0** do NOT have Skill 13 (`manage_kernel_updates`) and therefore cannot use `/update` to reach 0.3.0. The 0.2.0 → 0.3.0 jump is **bootstrap-only** and must be applied manually (copy the new files, install Skill 13, write `.pantheon-kernel-version`). From 0.3.0 onward, future versions are reachable via `/update`.
+
+### [NEW-FILE] CHANGELOG.md (kernel root)
+
+Strict structured changelog read by Skill 13. Each new release appends a `## X.Y.Z — date` block with tagged entries. Tag definitions in this file's header.
+
+### [NEW-FILE] .pantheon-kernel-version (workspace root)
+
+JSON state file tracking installed kernel version, kernel repo URL, applied patches, and skipped entries. Written by the installer at Phase 4.4.
+
+### [NEW-FILE] installer/artifacts/agents/main/files/kernel-update-spec.md
+
+Authoritative KUS contract: workspace state file, fetch/parse flow, per-tag apply behavior, hard refuse list (paths KUS NEVER touches), failure modes.
+
+### [NEW-FILE] installer/artifacts/.claude/commands/update-status.md
+### [NEW-FILE] installer/artifacts/.claude/commands/update.md
+
+Slash commands wiring `/update-status` → "main, kernel update status" and `/update` → "main, check kernel updates".
+
+### [EDIT-SECTION] installer/artifacts/agents/main/SKILL.md §Skill 13
+
+Adds new Skill 13 `manage_kernel_updates` with three sub-flows:
+- A — Status (read-only, Operating OK, L1)
+- B — Check & apply (Design hat, L3 per entry)
+- C — Aux ops (version dump / skip list / changelog preview, L1)
+
+### [NEW-POLICY-ROW] installer/artifacts/agents/main/POLICY.md §2.1
+
+Adds 9 rows covering KUS operations:
+
+| Action | Level |
+|---|---|
+| Read `.pantheon-kernel-version` | L1 |
+| Update `last_patch_check` | L1 |
+| Update `kernel_version` / `applied_patches` / `skipped_entries` | L2 |
+| Fetch CHANGELOG / kernel files (network) | L2 (Design hat, root-triggered only) |
+| Apply `[NEW-FILE]` | L3 (Design hat) |
+| Apply `[NEW-POLICY-ROW]` / `[NEW-RULE]` | L3 |
+| Apply `[REPLACE-FILE]` / `[EDIT-SECTION]` | L3 (3-way merge) |
+| Apply `[REMOVE]` | L3 |
+| Apply `[MIGRATION]` | L3 (per-step confirm) |
+| Touch refuse-list path via patch | L4 (forbidden) |
+
+### [EDIT-SECTION] installer/artifacts/README.md §Kernel updates
+
+New plain-English section: trigger commands, tag table, refuse list, no auto-check, no revert built-in, fork support.
+
+### [EDIT-SECTION] installer/INSTALL.md §Phase 4.4
+
+New install step: write `.pantheon-kernel-version` JSON to workspace root.
+
+### [MIGRATION] None required for fresh installs
+
+All changes are additive. Fresh installs at 0.3.0 work end-to-end. Existing 0.2.0 installs need the manual bootstrap noted in [META] above.
+
+---
+
 ## 0.2.0 — 2026-05-10
 
 Baseline. Includes:

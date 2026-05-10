@@ -3,7 +3,7 @@
 Multi-agent virtual office built on the Pantheon kernel.
 
 **Bootstrapped:** {{TODAY}}
-**Kernel:** 0.2.0
+**Kernel:** 0.3.0
 **Root:** {{ADDRESS}}
 **Default language:** {{LANGUAGE}}
 
@@ -466,4 +466,4 @@ In Design hat, type `root export pantheon kernel` → main regenerates `installe
 
 | Date | Change |
 |---|---|
-| {{TODAY}} | Initial scaffold from Pantheon kernel 0.2.0 |
+| {{TODAY}} | Initial scaffold from Pantheon kernel 0.3.0 |
