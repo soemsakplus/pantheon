@@ -61,6 +61,8 @@ Inputs: <list>
 Tools allowed: <list>
 Exit condition: <when to stop>
 Output format: <format>
+DEADLINE: <ISO timestamp>          # if you can't finish by then, return STATUS: partial
+EXPECTED_OUTPUT_FILE: <path>       # optional — main verifies this file exists + non-empty
 
 Comm rules:
 - Don't talk to root directly.
@@ -68,8 +70,9 @@ Comm rules:
 - Never write to any MEMORY file (you are stateless).
 - Return your result to caller. Then exit.
 
-Output MUST end with a status line:
+Output MUST end with a status block:
   STATUS: ok | partial | failed
+  ERROR_TYPE: <one of: auth_error | source_unreachable | parse_error | policy_block | internal_error | timeout | other>   # required when partial or failed; omit when ok
   REASON: <one short line — required when partial or failed>
 ```
 
@@ -78,12 +81,21 @@ Output MUST end with a status line:
 
 **Flow:**
 1. Read target's AGENT/SKILL/POLICY/MEMORY (verify scope match). **Always re-read MEMORY tail (last ~5 entries) from disk** — do NOT rely on a cached version from earlier in the same session; the agent may have run since.
-2. Construct Task prompt — embed target's full context + the task + expected output format
+2. Construct Task prompt — embed target's full context + the task + expected output format. **Always include a deadline:**
+   ```
+   DEADLINE: <ISO timestamp>   # default: now + 5 minutes (POLICY §4.5 soft timeout)
+   ```
+   If the task is expected to produce a file, also include:
+   ```
+   EXPECTED_OUTPUT_FILE: <path>
+   ```
 3. Invoke Task tool
-4. Receive result; if it ends with `MAIN_QUERY:` (see Skill 8), handle the query and re-spawn; otherwise relay to root
-5. Append delegation entry to own MEMORY (multi-agent appends its own actions per its POLICY)
+4. Receive result; if it ends with `MAIN_QUERY:` (see Skill 8), handle the query and re-spawn; otherwise continue.
+5. **Verify output (when applicable).** If `EXPECTED_OUTPUT_FILE` was set and `STATUS: ok|partial`, open the file and confirm: exists + size > 0 + (if a date/key marker was specified) marker present. **If verification fails, treat as `STATUS: failed` regardless of self-report** — log mismatch and apply retry policy (POLICY §4.5).
+6. Relay verified result to root.
+7. Append delegation entry to own MEMORY (multi-agent appends its own actions per its POLICY)
 
-**Note:** No file-based inbox/outbox. Communication is in-process via Task tool.
+**Note:** No file-based inbox/outbox. Communication is in-process via Task tool. Files appearing in `EXPECTED_OUTPUT_FILE` are work artifacts, not messages.
 
 ### Skill 5: `manage_memory`
 **Purpose:** keep MEMORY useful and bounded

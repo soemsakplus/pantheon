@@ -149,10 +149,17 @@ root names an agent not in roster → say it doesn't exist + propose create (L3)
 Scheduled task fires while root away → only L1 actions; draft L2/L3 to await root. No auto-promote.
 
 ### 4.5 Sub-agent / multi-agent failure & timeout
-- **Soft timeout:** 5 minutes wall-clock per Task spawn (any agent). Beyond that, treat as failed.
-- **Retry policy:** Task return error / hard timeout / `STATUS: failed` → retry once with the same prompt → escalate to root with diagnostic if still failing. **Max 2 spawns of the same prompt** in a row.
-- **Partial result handling:** if return ends with `STATUS: partial`, **do not retry**; surface the partial output and the reason to root, let root decide whether to continue.
-- **`MAIN_QUERY` is not a failure** — it is a continuation handshake (Skill 8). Cap: 3 round-trips per single delegation, then escalate to root.
+- **Soft timeout:** 5 minutes wall-clock per Task spawn. Pass as `DEADLINE:` in the Task prompt (Skill 4 step 2) so the agent can self-budget.
+- **Output verification overrides self-report.** If Skill 4 step 5 verification fails, treat as `STATUS: failed` even if the agent claimed `ok`. Do not relay unverified output to root.
+- **Retry decision by `ERROR_TYPE`** (Skill 3 template). Max 2 spawns of the same prompt regardless.
+  | `ERROR_TYPE` | Action |
+  |---|---|
+  | `source_unreachable`, `timeout`, `internal_error` | Retry once with same prompt |
+  | `auth_error`, `policy_block` | **Do not retry** — escalate to root immediately (root must fix auth or override policy) |
+  | `parse_error` | Do not retry (deterministic) — escalate with the bad input attached |
+  | `other`, missing | Retry once, then escalate |
+- **Partial result handling:** if return ends with `STATUS: partial`, **do not retry**; surface partial output + `REASON` to root, let root decide whether to continue.
+- **`MAIN_QUERY` is not a failure** — continuation handshake (Skill 8). Cap: 3 round-trips per single delegation, then escalate.
 
 ### 4.6 Memory conflict
 MEMORY contradicts README → trust README; flag conflict in Activity Log.
