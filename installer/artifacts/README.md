@@ -386,6 +386,73 @@ Shows: ahead/behind counts, which registry blueprints are newer than your local 
 
 > Authoritative spec: [`agents/main/files/blueprint-registry-spec.md`](agents/main/files/blueprint-registry-spec.md). MVP supports one registry per workspace; multi-registry deferred until needed.
 
+## Kernel updates — patching your pantheon when the kernel evolves
+
+Your pantheon was bootstrapped at a specific kernel version (recorded in `.pantheon-kernel-version` at the workspace root). When the kernel author publishes a new version with new rules, new shared/ structure, new policy rows, etc., you can pull those changes in **per-entry, with confirmation** — never wholesale, never automatic.
+
+```
+main, check kernel updates
+```
+
+What main does:
+
+1. Reads `.pantheon-kernel-version` to know your current version.
+2. Fetches the kernel repo's `CHANGELOG.md` (raw URL — single network call, no clone).
+3. Parses every version newer than yours into structured **entries**, each tagged with one of:
+
+   | Tag | Meaning |
+   |---|---|
+   | `[NEW-FILE]` | A new file or folder was added to the kernel |
+   | `[NEW-POLICY-ROW]` | One row added to a POLICY table |
+   | `[NEW-RULE]` | One new entry in a numbered hard-rule list |
+   | `[REPLACE-FILE]` | An existing file is rewritten — needs 3-way merge |
+   | `[EDIT-SECTION]` | A specific section inside a file is rewritten — needs 3-way merge |
+   | `[REMOVE]` | A file or section is removed |
+   | `[MIGRATION]` | Data movement / restructure required (script-form steps) |
+   | `[META]` | Documentation note, no action |
+
+4. Shows you a compact summary per version. You pick: review now / defer / cancel.
+5. For each entry you review, main proposes the change (preview / diff / 3-way merge), asks **L3 confirm**, and applies it.
+6. Versions are applied **oldest-first** (semver ordering — preserves migration dependencies).
+7. After applying, `.pantheon-kernel-version` is updated:
+   - `kernel_version` bumps to the latest fully-applied version
+   - `applied_patches` records which versions were processed
+   - `skipped_entries` records what you chose to skip and why (so main doesn't nag you again)
+
+### What main NEVER touches via kernel update
+
+Even if a CHANGELOG entry tries, main refuses and surfaces the refusal:
+
+- Any `MEMORY.md` (yours or any agent's)
+- `shared/user-profile.md`
+- `shared/truth/*`, `shared/import/*`, `shared/assets/*`
+- `agents/<name>/files/.lineage.json`
+- Any agent folder that is NOT `main` (your custom agents are off-limits)
+- `agents/<name>/files/verbatim/*`
+
+If you genuinely need a kernel patch to touch one of these, apply it yourself.
+
+### When does it run?
+
+- **Only when you ask.** Bootstrap never auto-checks (no surprise network calls, no slowed greeting).
+- Re-running is idempotent — applied entries are not re-applied; skipped entries stay skipped unless you reset.
+
+### Aux commands
+
+- `main, kernel version` — print the current `.pantheon-kernel-version` JSON
+- `main, kernel skip list` — show entries you've skipped, offer to revisit each
+- `main, kernel changelog [<version>]` — fetch and show the CHANGELOG (or one version block) without applying anything
+
+### No revert built-in
+
+If you regret a patch, use Git on your workspace itself (`git revert`, `git checkout`). KUS does not implement revert — your workspace is already a Git repo, that's the right tool.
+
+### If you cloned from a fork
+
+`.pantheon-kernel-version` ships with `kernel_repo` set to the canonical repo URL. If you cloned from a fork, edit that file and point `kernel_repo` at your fork (the raw CHANGELOG URL is derived from there).
+
+> Authoritative spec: [`agents/main/files/kernel-update-spec.md`](agents/main/files/kernel-update-spec.md). CHANGELOG format: see the kernel repo's `CHANGELOG.md` header.
+
 ## Re-export the kernel
 
 In Design hat, type `root export pantheon kernel` → main regenerates `installer/artifacts/` + `PANTHEON-INSTALL.md`, stripping personal data, ready for someone else to clone.

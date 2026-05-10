@@ -341,6 +341,51 @@ shared/imported-agent-blueprint/<handle>.blueprint.md
 
 **Privacy contract** (registry spec §9): scan every push; main never handles Git credentials.
 
+### Skill 13: `manage_kernel_updates` (Design hat only)
+**Purpose:** discover and apply kernel updates published in the kernel repo's `CHANGELOG.md`. Per-entry, root-confirmed, semver-ordered. Never auto-fetches, never auto-applies.
+
+**Spec reference:** `agents/main/files/kernel-update-spec.md` (KUS).
+
+**Hat gate:** Design hat ONLY. Refuse in Operating: *"Kernel updates are system changes — switch to Design hat first."*
+
+**Triggers (conversational):**
+- "main, check kernel updates" / "main, อัปเดต kernel" / "main, ดู patch ใหม่"
+- "main, kernel version" — print `.pantheon-kernel-version`
+- "main, kernel skip list" — review skipped entries
+- "main, kernel changelog [`<version>`]" — fetch and show without applying
+
+**Sub-flow A — Check & apply** (KUS §4-§8):
+1. Read `.pantheon-kernel-version`. If missing, refuse and tell root to run `main, kernel version --init` (or fix manually).
+2. Fetch `CHANGELOG.md` from `kernel_repo` (raw URL; e.g., `raw.githubusercontent.com/<owner>/<repo>/main/CHANGELOG.md`). Update `last_patch_check` immediately.
+3. Parse versions newer than `kernel_version` (semver). Within each block, parse `### [TAG] <scope>` entries. Filter out entries whose `entry_id` is in `skipped_entries`.
+4. Show summary table per version (tag + scope). Ask root: review now / defer / cancel.
+5. For each pending version (oldest first), walk entries one by one. Per tag:
+   - **`[NEW-FILE]`** — fetch + L3 confirm + write (skip if local exists)
+   - **`[NEW-POLICY-ROW]`** — append to specified table (skip duplicates)
+   - **`[NEW-RULE]`** — append to numbered list (skip duplicates)
+   - **`[REPLACE-FILE]` / `[EDIT-SECTION]`** — 3-way merge (kernel-base@old vs kernel-new vs local). Cap 10 conflicts/entry. Identical local → safe overwrite.
+   - **`[REMOVE]`** — show + confirm + delete
+   - **`[MIGRATION]`** — interactive walkthrough, per-step confirm
+   - **`[META]`** — informational, mark acknowledged
+6. Apply confirmed entries. Bump `kernel_version`. Append to `applied_patches`. Append skips to `skipped_entries` (with reason + timestamp).
+7. Report final summary (applied / skipped / manual-needed). Append entry to own MEMORY.
+
+**Sub-flow B — Aux ops** (KUS §9): version dump / skip list / changelog preview — all L1 read-only.
+
+**Hard refuses** (KUS §7) — KUS NEVER touches:
+- Any `MEMORY.md` (main's or any agent's)
+- `shared/user-profile.md`
+- `shared/truth/*`, `shared/import/*`, `shared/assets/*`
+- `agents/<name>/files/.lineage.json`
+- Any agent folder other than `agents/main/` (user-created agents are off-limits)
+- `agents/<name>/files/verbatim/*`
+
+If a CHANGELOG entry attempts any of the above, REFUSE that entry, surface to root, suggest manual application.
+
+**Failure modes** (KUS §11): network down → abort + retry later; CHANGELOG malformed → surface parse error; kernel_repo URL invalid → tell root to fix; merge conflicts >10 → skip + manual edit.
+
+**Sheridan level:** L2 for fetch + summarize. **L3 per entry application** (each entry is its own confirm). L1 for read-only aux ops.
+
 ## 3. Standard Operating Procedure (SOP)
 
 ```

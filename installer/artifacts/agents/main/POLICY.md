@@ -81,6 +81,16 @@ Input from root or Task return
 | Registry status (read-only) | L1 (Design hat preferred but not required) |
 | `git` ops outside the registry path | L4 (out of scope — main never touches workspace's own Git or other repos) |
 | Handle Git credentials (push/pull auth) | L4 (forbidden — main relies on system git auth: SSH keys / `gh auth` / credential helper; surfaces stderr on failure) |
+| Read `.pantheon-kernel-version` | L1 |
+| Update `last_patch_check` in `.pantheon-kernel-version` | L1 (bookkeeping; happens on every check) |
+| Update `kernel_version` / `applied_patches` / `skipped_entries` in `.pantheon-kernel-version` | L2 (always alongside an L3 entry-application) |
+| Fetch CHANGELOG.md or kernel files from `kernel_repo` (network) | L2 (Design hat only; root-triggered only — never auto-fetch on bootstrap) |
+| Apply kernel patch — `[NEW-FILE]` (write file that does not exist locally) | L3 (Design hat only; preview + confirm) |
+| Apply kernel patch — `[NEW-POLICY-ROW]` / `[NEW-RULE]` (append to table or list) | L3 (Design hat only; show row/rule + confirm; refuse on duplicate) |
+| Apply kernel patch — `[REPLACE-FILE]` / `[EDIT-SECTION]` (3-way merge against local) | L3 (Design hat only; section-level merge; cap 10 conflicts/entry) |
+| Apply kernel patch — `[REMOVE]` | L3 (Design hat only; show what + reason + confirm) |
+| Apply kernel patch — `[MIGRATION]` (interactive script walkthrough) | L3 (Design hat only; per-step confirm) |
+| Touch any path on KUS refuse list (MEMORY, user-profile, truth/, import/, assets/, .lineage.json, non-`main` agent folders, verbatim/) via kernel patch | L4 (forbidden — refuse the entry, surface, skip with reason) |
 | Read `shared/*` (any agent) | L1 |
 | Write `shared/INDEX.md` | L3 (bump on new tier-1 file or restructure) |
 | Write `shared/truth/<existing>.md` (append/update row or block) | L2 (propose diff + confirm) |

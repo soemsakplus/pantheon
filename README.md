@@ -203,6 +203,9 @@ Default flow: you ↔ main only. Want to talk to a specialist directly? `/connec
 ### Cross-workspace portability
 Move an agent (or main itself) between Pantheon workspaces as a **blueprint** — `/export-agent <name>` produces a project-stripped template; drop it in another pantheon's `shared/imported-agent-blueprint/` and run `/import-agent <handle>`. Both are Design-hat operations.
 
+### Kernel updates (patching installed pantheons)
+When the kernel author publishes a new version of Pantheon, installed pantheons can pull in the changes per-entry, with confirmation, via `main, check kernel updates`. The mechanism is CHANGELOG-driven — see [CHANGELOG.md](CHANGELOG.md) for the strict structured format that `main` Skill 13 (`manage_kernel_updates`) reads. Kernel version of each pantheon is tracked in `.pantheon-kernel-version` at its workspace root.
+
 > Full sections with examples and edge cases: [installer/artifacts/README.md](installer/artifacts/README.md). Architecture spec: [PANTHEON-INSTALL.md](PANTHEON-INSTALL.md).
 
 ---
