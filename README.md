@@ -1,5 +1,7 @@
 # Pantheon — Multi-Agent Virtual Office Kernel
 
+![Pantheon logo](assets/pantheon-logo.svg)
+
 > **An OS-like scaffolding for Claude Code.**
 > Install once, then grow your own pantheon of AI agents — one specialist at a time.
 
@@ -157,6 +159,48 @@ create a notes agent that helps me journal daily
 
 ---
 
+## What you get after install (preview)
+
+After install, your repo's `README.md` is replaced with a longer **post-install README** that explains your pantheon in plain English. The full guide lives at [installer/artifacts/README.md](installer/artifacts/README.md) (preview before you install). Quick mental model:
+
+### The four files per agent
+Every agent is described by 4 files: **AGENT** (who I am), **SKILL** (what I can do), **POLICY** (what I'm allowed), **MEMORY** (what I've done). Read in that order to understand any agent.
+
+### Sheridan levels — when does main ask permission?
+- **L1** do it, then tell you · **L2** propose plan first · **L3** confirm + show diff · **L4** forbidden, you do it yourself
+
+main states the level when L2 or higher.
+
+### Memory
+Each agent owns its own MEMORY (a personal diary). Single writer per file — no cross-agent edits. Compaction is never autonomous; main flags when MEMORY gets large and asks before cleaning. Long reflections from you are stored two ways — a structured summary in MEMORY plus the raw verbatim in `agents/<name>/files/verbatim/`.
+
+### Shared knowledge (`shared/`)
+Anything multiple agents need lives here:
+- **Always loaded:** `INDEX.md` (catalog), `user-profile.md` (you), `conventions.md` (rules)
+- **Lazy loaded:** `truth/team.md`, `truth/glossary.md`, `truth/projects.md`, `truth/sources/` (verbatim originals)
+- **Drop folders:** `import/` (drop a doc → "main, ดู `shared/import/X` ให้หน่อย" → main extracts facts), `assets/` (drop binaries → "main, index รูปนี้")
+
+Decision rule: *"does another agent need this?"* — yes → `shared/`, no → that agent's MEMORY.
+
+### How agents talk to each other
+main delegates to specialists via the Task tool — in-process call/return, no file mailboxes. Every spawn passes a **DEADLINE** (default 5 min) and optional **EXPECTED_OUTPUT_FILE**. Specialist returns ending with:
+```
+STATUS: ok | partial | failed
+ERROR_TYPE: auth_error | source_unreachable | parse_error | policy_block | internal_error | timeout | other
+REASON: <one short line if not ok>
+```
+main verifies output (file exists + non-empty) before relaying. Retry depends on `ERROR_TYPE` (transient → retry once; auth/policy/parse → escalate immediately). Stuck mid-task? Specialist returns `MAIN_QUERY: <question>` and main answers + re-spawns (cap 3 round-trips).
+
+### Direct Mode
+Default flow: you ↔ main only. Want to talk to a specialist directly? `/connect <agent>` opens a direct line; `/back` exits with a session summary back to main.
+
+### Cross-workspace portability
+Move an agent (or main itself) between Pantheon workspaces as a **blueprint** — `/export-agent <name>` produces a project-stripped template; drop it in another pantheon's `shared/imported-agent-blueprint/` and run `/import-agent <handle>`. Both are Design-hat operations.
+
+> Full sections with examples and edge cases: [installer/artifacts/README.md](installer/artifacts/README.md). Architecture spec: [PANTHEON-INSTALL.md](PANTHEON-INSTALL.md).
+
+---
+
 ## How the install works (under the hood)
 
 The kernel deliberately separates **orchestration** from **content**:
@@ -190,9 +234,9 @@ This repo is the kernel — improvements here propagate to every new pantheon. G
 - **Documentation** in [PANTHEON-INSTALL.md](PANTHEON-INSTALL.md) and this README
 - **Roadmap features** (see [PANTHEON-INSTALL.md §15](PANTHEON-INSTALL.md)):
   - Cron / scheduled agents
-  - Agent blueprint import/export
   - MCP connector declarations
   - Reusable playbooks (cross-agent shared procedures)
+  - PII tier (`shared/private/`) for export-safe sensitive data
 
 ### Test flow before submitting
 
