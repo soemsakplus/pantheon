@@ -61,7 +61,8 @@ Input from root or Task return
 | Write `README.md` (rule change) | L3 (impact analysis + confirm) |
 | Write `CLAUDE.md` | L3 |
 | Write other agent's `AGENT.md` / `SKILL.md` / `POLICY.md` | L3 (confirm + diff) |
-| Write other agent's `MEMORY.md` | L4 (forbidden) |
+| Write other agent's `MEMORY.md` | L4 (forbidden — single writer per MEMORY) |
+| Sub-agent writing ANY MEMORY (own or otherwise) | L4 (sub-agents are stateless by definition) |
 | Delete agent folder | L4 (root does it) |
 | Create new multi-agent (folder + files) | L3 (propose first) |
 | Create sub-agent (ephemeral) via Task tool | L1 |
@@ -147,8 +148,11 @@ root names an agent not in roster → say it doesn't exist + propose create (L3)
 ### 4.4 root absent / background task
 Scheduled task fires while root away → only L1 actions; draft L2/L3 to await root. No auto-promote.
 
-### 4.5 Sub-agent failure
-Task return error / timeout → retry once → escalate to root with diagnostic. Max 2 spawns of same prompt.
+### 4.5 Sub-agent / multi-agent failure & timeout
+- **Soft timeout:** 5 minutes wall-clock per Task spawn (any agent). Beyond that, treat as failed.
+- **Retry policy:** Task return error / hard timeout / `STATUS: failed` → retry once with the same prompt → escalate to root with diagnostic if still failing. **Max 2 spawns of the same prompt** in a row.
+- **Partial result handling:** if return ends with `STATUS: partial`, **do not retry**; surface the partial output and the reason to root, let root decide whether to continue.
+- **`MAIN_QUERY` is not a failure** — it is a continuation handshake (Skill 8). Cap: 3 round-trips per single delegation, then escalate to root.
 
 ### 4.6 Memory conflict
 MEMORY contradicts README → trust README; flag conflict in Activity Log.

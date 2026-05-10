@@ -65,17 +65,22 @@ Output format: <format>
 Comm rules:
 - Don't talk to root directly.
 - Don't contact other agents.
+- Never write to any MEMORY file (you are stateless).
 - Return your result to caller. Then exit.
+
+Output MUST end with a status line:
+  STATUS: ok | partial | failed
+  REASON: <one short line — required when partial or failed>
 ```
 
 ### Skill 4: `delegate_to_multi_agent`
 **Purpose:** send work to existing multi-agent (has MEMORY)
 
 **Flow:**
-1. Read target's AGENT/SKILL/POLICY/MEMORY (verify scope match)
+1. Read target's AGENT/SKILL/POLICY/MEMORY (verify scope match). **Always re-read MEMORY tail (last ~5 entries) from disk** — do NOT rely on a cached version from earlier in the same session; the agent may have run since.
 2. Construct Task prompt — embed target's full context + the task + expected output format
 3. Invoke Task tool
-4. Receive result; relay to root
+4. Receive result; if it ends with `MAIN_QUERY:` (see Skill 8), handle the query and re-spawn; otherwise relay to root
 5. Append delegation entry to own MEMORY (multi-agent appends its own actions per its POLICY)
 
 **Note:** No file-based inbox/outbox. Communication is in-process via Task tool.
@@ -88,18 +93,27 @@ Comm rules:
 2. New root facts → `## Learned Facts`
 3. Important decisions → `## Key Decisions`
 
-**Compact (weekly/monthly):**
+**Compact (root-initiated only — L3):**
 1. Read full MEMORY
 2. Identify oversized sections
 3. Rolling summary:
    - Entries older than 30d → 1 paragraph per week
    - Entries older than 90d → 1 paragraph per month
-   - Key Decisions + Learned Facts + Open Items → never compact
+   - Key Decisions + Learned Facts + Open Items + Verbatim pointers → never compact
    - Entries < 7 days → never compact
-4. Archive original to `agents/main/files/memory-archive/YYYY-MM.md`
+4. Archive original to `agents/main/files/memory-archive/YYYY-MM.md`. **If a file already exists for that month**, append (do not overwrite) with a separator block:
+   ```
+   ---
+   # Compaction <ISO timestamp>
+   ```
 5. Update MEMORY with summary version
 
-**Trigger compact when:** file > 50KB | weekly cron | monthly cron | manual root request
+**Compact is never autonomous.** No cron. main proactively suggests compact in the bootstrap greeting (per CLAUDE.md §4.1) when ANY threshold is hit:
+- file > 50KB
+- > 50 entries in Recent Activity Log
+- last compact > 30 days ago
+
+root then says go (or not). Compact itself is L3 (confirm + diff) per POLICY §2.1.
 
 ### Skill 6: `update_system_rule`
 **Purpose:** modify README, CLAUDE.md, or any agent's system file on root's request
@@ -137,10 +151,20 @@ Comm rules:
 ### Skill 8: `provide_context_to_agent`
 **Purpose:** answer system-context queries from other agents (during a delegation)
 
+**Convention — `MAIN_QUERY` marker:** when a delegated agent needs main's input mid-task, it ends its Task return with:
+```
+MAIN_QUERY: <one-line question>
+PARTIAL_RESULT: <what's done so far, free-form>
+```
+
 **Flow:**
-1. Multi-agent (during a Task delegation) embeds its question in the requested output
-2. main receives via Task return, provides answer in next round
-3. Suggest agent reads `shared/*` directly next time
+1. Receive Task return; if it ends with `MAIN_QUERY:` block, parse the question and the partial result.
+2. Answer the question (read `shared/*` if needed).
+3. Re-spawn the same specialist via Task tool with: original prompt + main's answer + the partial result + instruction "continue from where you stopped".
+4. Specialist completes; main relays final result to root.
+5. If the question was documentation-shaped, suggest the specialist read `shared/*` directly next time.
+
+**Cap:** at most 3 `MAIN_QUERY` round-trips per single delegation. If the specialist still needs more, escalate to root with the partial result.
 
 ### Skill 9: `export_agent` (portability — Design hat only)
 **Purpose:** export any agent as a reusable Pantheon blueprint that can be imported into another workspace.

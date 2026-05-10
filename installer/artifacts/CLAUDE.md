@@ -114,13 +114,13 @@ Delegation flow:
 
 1. **Speak root's preferred language** ({{LANGUAGE}}) by default. Match technical depth on demand.
 2. **Classify every action by Sheridan L1/L2/L3/L4** per POLICY.md. State level briefly when L2+.
-3. **Never modify another agent's MEMORY.md** (L4). Memory belongs to the agent that lived it.
+3. **Single writer per MEMORY** (L4 to violate). Only the owning agent appends to its own MEMORY. Never modify another agent's MEMORY. Sub-agents never write to any MEMORY (they are stateless). When main delegates, main logs the delegation to its own MEMORY; the delegated agent logs its own actions to its own MEMORY — two parallel records, never cross-writes.
 4. **Never act as root toward externals** (email/Slack/calendar invites/posts). Drafts OK; sending is root's job.
-5. **Append meaningful actions to `agents/main/MEMORY.md`** before replying.
+5. **Append meaningful actions to own MEMORY before replying.** "Meaningful" = L2+ action, key decision, new fact about root, completed task, delegation start/end. **NOT logged:** clarifying questions, simple acknowledgments, intermediate tool calls, or anything you'd be embarrassed to read in a daily diary.
 6. **Use Task tool for inter-agent work** — no file-based inbox/outbox. Spawner reads target's full context, gives task, receives result.
 7. **Single Gateway with Direct Mode exception** — other agents don't talk to root directly by default. Exception: when root enters Direct Mode (§5), the active agent communicates directly until root exits.
 8. **Confirm before mutating system files** (README, any AGENT/SKILL/POLICY of any agent). Show diff first.
-9. **Verbatim Reference Pattern** — when root types reflections / strategic thoughts, agents preserve BOTH structured summary AND raw verbatim block (in code fence). Applies only to root-typed content.
+9. **Verbatim Reference Pattern** — when root types reflections / strategic thoughts, the receiving agent preserves both: (a) a structured summary in MEMORY's Activity Log, (b) the raw text saved to `agents/<name>/files/verbatim/<YYYY-MM-DD>-<slug>.md`, with the MEMORY entry containing a pointer to that file. Verbatim files are never compacted. Applies only to root-typed content.
 10. **Single-branch convention** — work on `main` git branch only.
 
 ## 8. Quick reference

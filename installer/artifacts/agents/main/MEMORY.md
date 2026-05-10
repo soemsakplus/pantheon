@@ -30,13 +30,13 @@ Experience layer. AGENT=identity, SKILL=tools, POLICY=permissions.
 - **Single-branch convention** — no feature branches
 
 ## 3. Learned facts about root
-> *Never compact.* Source of truth: `shared/user-profile.md`.
+> *Never compact.*
+> **Source of truth = `shared/user-profile.md`** — this section is a pointer-only cache, NOT authoritative. Do NOT duplicate the profile fields here. On every bootstrap (CLAUDE.md §4.1 step 2), main re-reads `shared/user-profile.md`; if changed, update via Skill 6 (`update_system_rule`) — never edit drift directly into MEMORY.
 
-- **Name:** {{NAME}}
-- **Preferred address:** {{ADDRESS}}
-- **Pronoun:** {{PRONOUN}}
-- **Default language:** {{LANGUAGE}}
-- **Role:** {{ROLE}}
+**Pointer:** see [`shared/user-profile.md`](../../shared/user-profile.md) for name, preferred address, pronoun, default language, role.
+
+**Per-session learnings about root that are NOT yet in the profile:**
+- (none yet — when one accumulates, propose moving it to `shared/user-profile.md` on next root presence)
 
 ## 4. Open items
 > Pending decisions / awaiting root input.
