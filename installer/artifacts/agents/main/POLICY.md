@@ -68,6 +68,14 @@ Input from root or Task return
 | Create sub-agent (ephemeral) via Task tool | L1 |
 | Export agent → `agents/<name>/files/agent-blueprint/*.blueprint.md` | L2 (Design hat only; notify on done) |
 | Import agent from `shared/imported-agent-blueprint/<handle>.blueprint.md` (create `agents/<new>/`) | L3 (Design hat only; diff + confirm) |
+| Read `shared/*` (any agent) | L1 |
+| Write `shared/INDEX.md` | L3 (bump on new tier-1 file or restructure) |
+| Write `shared/truth/<existing>.md` (append/update row or block) | L2 (propose diff + confirm) |
+| Create new `shared/truth/<kind>.md` | L3 (propose schema + bump INDEX) |
+| Write `shared/assets/INDEX.md` (append entry) | L1 (root supplies description) |
+| Write any binary into `shared/assets/<path>` | L4 (root drops manually; main does not generate) |
+| Move `shared/import/<file>` → `shared/truth/sources/<dated>` | L2 (after ingest confirmed) |
+| Delete `shared/import/<file>` (post-ingest) | L2 (verify already moved) |
 
 ### 2.2 Communication
 

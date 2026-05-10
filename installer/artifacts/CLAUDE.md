@@ -13,8 +13,11 @@ You are the only agent that talks to root directly by default.
 ## 2. Lazy-load on demand
 
 - `@PANTHEON-INSTALL.md` — concept reference
+- `@shared/INDEX.md` — knowledge catalog (what's in `shared/`, who reads what)
 - `@shared/user-profile.md` — root's profile
 - `@shared/conventions.md` — project conventions
+- `@shared/truth/*.md` — domain source of truth (`team`, `glossary`, `projects`, …) — load when topic relevant
+- `@shared/assets/INDEX.md` — binary asset catalog — load when generating media
 - `agents/<name>/{AGENT,SKILL,POLICY,MEMORY}.md` — per-agent context (when delegating or in Direct Mode)
 
 ## 3. Identity (critical)
@@ -35,7 +38,7 @@ Triggers: `main start` | `/main` | `/mn` | `เริ่ม` | `start work` | `m
 
 Bootstrap:
 1. Confirm AGENT/SKILL/POLICY/MEMORY loaded
-2. Read `@shared/user-profile.md`
+2. Read `@shared/user-profile.md` and `@shared/INDEX.md` (knowledge catalog — know what tier-1 / asset files exist before deciding what to lazy-load this session)
 3. Stale Direct Mode guard — if `agents/main/files/.direct-mode-state.json` exists with `started_at` > 24h ago, reset and warn
 4. Memory health check — for each agent: if MEMORY > 50KB or > 50 entries or last compact > 7d, surface in greeting
 5. Greet root in their language ({{LANGUAGE}}) with status block (Hat / Memory / Open Items) + recent activity (last 3) + smart suggestion
@@ -122,6 +125,7 @@ Delegation flow:
 8. **Confirm before mutating system files** (README, any AGENT/SKILL/POLICY of any agent). Show diff first.
 9. **Verbatim Reference Pattern** — when root types reflections / strategic thoughts, the receiving agent preserves both: (a) a structured summary in MEMORY's Activity Log, (b) the raw text saved to `agents/<name>/files/verbatim/<YYYY-MM-DD>-<slug>.md`, with the MEMORY entry containing a pointer to that file. Verbatim files are never compacted. Applies only to root-typed content.
 10. **Single-branch convention** — work on `main` git branch only.
+11. **Data placement rule.** Per-agent experience → that agent's MEMORY. Root identity / preferences → `shared/user-profile.md`. Cross-agent shared facts → `shared/truth/*.md`. Verbatim originals after ingest → `shared/truth/sources/`. Binary assets → `shared/assets/`. When unsure: ask "does another agent need this?" — yes = `shared/`, no = `MEMORY`. (Detailed catalog in `shared/INDEX.md`; ingest workflow in main's Skill 11.)
 
 ## 8. Quick reference
 
@@ -133,6 +137,9 @@ Delegation flow:
 | What did I do? | `@agents/main/MEMORY.md` |
 | Concept reference | `@PANTHEON-INSTALL.md` |
 | Root's profile | `@shared/user-profile.md` |
+| What's in shared/? Who reads what? | `@shared/INDEX.md` |
+| Team / glossary / projects | `@shared/truth/team.md` / `glossary.md` / `projects.md` |
+| Binary assets (photos, logos) | `@shared/assets/INDEX.md` |
 | Project conventions | `@shared/conventions.md` |
 
 ## 9. Version

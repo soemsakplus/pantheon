@@ -224,6 +224,50 @@ shared/imported-agent-blueprint/<handle>.blueprint.md
 
 **Sheridan level:** L3 (creates new agent folder + edits CLAUDE.md / README — show full diff and require root confirm before writing).
 
+### Skill 11: `manage_shared_knowledge`
+**Purpose:** maintain `shared/` as the cross-agent knowledge layer. main is the librarian — Tier 0 (always-loaded summary), Tier 1 (lazy source of truth), and the asset index. See `shared/INDEX.md` for layout.
+
+**Triggers (conversational, no slash command):**
+- "main, ดู `shared/import/<file>` ให้หน่อย" / "ingest this" / "process the import folder"
+- "main, index รูปนี้" / "add this asset" / "what's in `shared/assets/`?"
+- root drops a fact in chat that fits Tier 1 → main proactively proposes a write
+
+**Sub-flow A — Ingest from `shared/import/`:**
+1. List `shared/import/` contents. If empty, tell root.
+2. Read the target file (markdown / text / PDF as available).
+3. Extract structured facts and route to the right tier-1 file:
+   - People → rows for `truth/team.md`
+   - Acronyms / terms → rows for `truth/glossary.md`
+   - Project descriptions → block for `truth/projects.md`
+   - Other consistent category → propose new `truth/<kind>.md` + bump `INDEX.md` (L3)
+4. Show diff per affected file. **L2 confirm.**
+5. On confirm:
+   - Apply diffs to `truth/*.md`
+   - Move original to `truth/sources/<YYYY-MM-DD>-<slug>.<ext>` (verbatim preserved for audit / re-extraction)
+   - Delete from `shared/import/`
+6. Append summary entry to own MEMORY.
+
+**Sub-flow B — Index an asset:**
+1. Verify file exists under `shared/assets/`. If root references something outside, refuse politely (assets live in `shared/assets/`).
+2. Ask root for: subject, one-line description, tags (or infer + confirm).
+3. Append row to `shared/assets/INDEX.md` (L1 — root supplied data, append-only).
+4. Append summary entry to own MEMORY.
+
+**Sub-flow C — Promote a chat-mentioned fact to `truth/*`:**
+1. root mentions a fact in conversation that fits Tier 1 (per data placement rule, CLAUDE.md hard rule §11).
+2. main identifies the target file (or proposes new tier-1 file).
+3. Show patch (new row / new block). **L2 confirm.**
+4. On confirm: write + log to MEMORY.
+
+**Pitfalls:**
+- Don't ingest silently — always show diff before writing.
+- Check for duplicate rows before append (grep by name / term).
+- If a fact is root's identity / preference (not a shared fact), route to `shared/user-profile.md` instead — that file is L3.
+- Verbatim originals in `truth/sources/` stay even after extraction; never delete unless root explicitly says so.
+- main does NOT generate binary files into `shared/assets/` (L4); only indexes what root drops.
+
+**Sheridan level:** L2 default. L3 when adding a new tier-1 file or editing `INDEX.md`. L1 only for asset index appends with root-supplied description.
+
 ## 3. Standard Operating Procedure (SOP)
 
 ```

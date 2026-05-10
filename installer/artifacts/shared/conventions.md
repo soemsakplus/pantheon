@@ -36,20 +36,17 @@
 
 ## Verbatim reference pattern
 
-When agents record root-typed reflections / strategic thoughts, they MUST keep BOTH a structured summary AND the raw verbatim block (in a triple-backtick code fence). This applies only to root-typed content, not generated summaries.
+When agents record root-typed reflections / strategic thoughts, they MUST preserve BOTH:
 
-Example:
+1. **A structured summary** in the agent's MEMORY Activity Log entry.
+2. **The raw text** saved to `agents/<name>/files/verbatim/<YYYY-MM-DD>-<slug>.md`.
+
+The MEMORY entry contains a pointer to the verbatim file (e.g., `→ verbatim: files/verbatim/2026-05-10-product-strategy.md`). Verbatim files are never compacted. Applies only to root-typed content, not generated summaries. (See CLAUDE.md hard rule §9.)
+
+Example MEMORY entry:
 
 ```markdown
-### 💭 {Topic}
-
-**Key points:**
-- structured bullet
-- structured bullet
-
-\`\`\`
-<root's original text, verbatim>
-\`\`\`
+- [2026-05-10] root reflection on Q3 product strategy → key points: pivot to enterprise, freeze consumer features, hire 2 AEs. → verbatim: files/verbatim/2026-05-10-q3-strategy.md
 ```
 
 ## Inter-agent communication
