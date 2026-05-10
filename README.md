@@ -274,6 +274,71 @@ See [PANTHEON-INSTALL.md §17](PANTHEON-INSTALL.md) for the full version log.
 
 ---
 
+## Why Pantheon? (and how it compares)
+
+I liked tools like **OpenHands** (formerly OpenDevin) and **CrewAI** — they're powerful and well-built. But I didn't fully trust them with my own work: too much autonomy by default, too much state hidden in framework runtime, too much "magic" between me and what the agent actually does. So I built Pantheon — not as a replacement, but as the **lightweight, file-first, fully-inspectable** alternative I wanted for myself.
+
+Every design choice points at the same goal: **the human stays in the loop, and every state, rule, and decision is a markdown file you can read, diff, and version.** That is intentional, not a side effect of being small.
+
+### What Pantheon is (positioning)
+
+A **persistent, file-first, hierarchical multi-agent kernel** for Claude Code, implementing the **orchestrator-worker pattern** with **explicit Sheridan L1–L4 autonomy classification** per action and **role / skill / policy / memory separation** per agent.
+
+In one sentence for non-researchers: *Pantheon turns Claude Code into a virtual office — a chief of staff (`main`) coordinating specialist agents, every one of whom keeps their own memory and rules in plain markdown files you can read.*
+
+### Lightweight by design
+
+|  | Pantheon | CrewAI | AutoGen | OpenHands |
+|---|---|---|---|---|
+| **Install** | `git clone` + answer 4 questions | `pip install` + write Python | `pip install` + write Python | Docker + sandbox VM |
+| **Runtime** | Claude Code only | Python process | Python process | VM + container |
+| **State** | markdown files | in-memory + optional DB | in-memory | in-memory + sandbox FS |
+| **Multi-agent?** | ✓ (hierarchical, single gateway) | ✓ (crew) | ✓ (group chat) | ✗ (single agent) |
+| **Persistent memory per agent?** | ✓ (4-file architecture) | ✓ (optional) | partial | ✓ (single agent) |
+| **Cross-workspace portability?** | ✓ (BLS + registry + KUS) | ✗ | ✗ | ✗ |
+| **No framework runtime?** | ✓ | ✗ | ✗ | ✗ |
+
+There is **no framework process**, **no orchestration server**, **no database**, **no cloud backend**. Pantheon is a **convention + protocol on top of Claude Code** — markdown files for state, the Task tool for agent-to-agent calls, slash commands for UX. If you can read a markdown file you can audit your entire pantheon.
+
+### Closest neighbors
+
+| Project | Closest to Pantheon in… | Where it diverges |
+|---|---|---|
+| **CrewAI** | Role-based crews, hierarchical processes, agent memory | Python framework, code-first, runtime engine |
+| **AutoGen** (Microsoft) | Multi-agent conversation, role-defined | Code-first, group-chat broadcast (no single gateway) |
+| **MetaGPT** | Role-driven (PM / Architect / Engineer), assembly line | Hard-coded SDLC, software-dev only |
+| **OpenAI Swarm** | Lightweight handoffs between agents | Stateless handoffs, no persistent per-agent memory |
+| **Letta** (formerly MemGPT) | Persistent agent + memory tiering | Single-agent focus, not multi-agent orchestration |
+| **Cognition Devin** | Long-running agent + memory + planning | Single autonomous agent, proprietary, not a kernel |
+| **OpenHands** (formerly OpenDevin) | Autonomous agent + sandbox | Single SWE agent, no role hierarchy, sandboxed VM |
+| **Claude Code subagents** (built-in) | Task-tool spawning | Ephemeral only, no persistent memory, no policy layer |
+
+Closest-in-shape: **CrewAI** (concept), **Letta** (memory model), **OpenAI Swarm** (lightweight handoff). What Pantheon does that none of those do: **Sheridan L1–L4 in policy**, **4-file role/skill/policy/memory split**, **OS-installer + blueprint distribution + lineage tracking**.
+
+### Academic foundations
+
+Pantheon stands on:
+
+| Concept | Source |
+|---|---|
+| L1–L4 autonomy framework | Sheridan 1992 — *Telerobotics, Automation, and Human Supervisory Control* |
+| Multi-agent systems (overview) | Wooldridge 2009 — *An Introduction to MultiAgent Systems* |
+| BDI architecture (belief / desire / intention → AGENT / SKILL / POLICY split) | Rao & Georgeff 1995 |
+| Society of Mind | Minsky 1986 |
+| Generative agents (memory + reflection + planning) | Park et al. 2023 — Stanford "Smallville" |
+| Persistent memory tiering | Packer et al. 2023 — *MemGPT: Towards LLMs as Operating Systems* |
+| Constitutional / rule-based behavior | Anthropic 2022 |
+| Orchestrator-worker pattern | Anthropic 2024 — *Building Effective Agents* |
+
+### TL;DR for different audiences
+
+- **General audience:** "A kernel that turns Claude Code into a virtual office. A chief of staff (`main`) takes your orders and delegates to specialist agents. Every agent keeps its own diary in markdown files."
+- **Engineer:** "Lightweight file-first multi-agent kernel for Claude Code. Hierarchical orchestrator-worker with Sheridan autonomy levels. No framework runtime — just markdown + Task tool."
+- **Researcher:** "Persistent hierarchical MAS implementing the orchestrator-worker pattern with explicit AGENT/SKILL/POLICY/MEMORY separation per role, Sheridan L1–L4 action classification, and a blueprint distribution system inspired by package managers."
+- **Skeptic:** "Like CrewAI, but every state, rule, and decision is a markdown file you can read, diff, and version. No framework runtime to trust."
+
+---
+
 ## References
 
 The system draws on:
