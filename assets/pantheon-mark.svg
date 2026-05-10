@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Pantheon mark</title>
+  <desc id="desc">A temple-like kernel mark with a root node, main node, and multi-agent pillars.</desc>
+  <defs>
+    <linearGradient id="kernel" x1="116" y1="88" x2="396" y2="424" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4D389"/>
+      <stop offset="0.48" stop-color="#D6A84F"/>
+      <stop offset="1" stop-color="#9E6F28"/>
+    </linearGradient>
+    <linearGradient id="signal" x1="160" y1="160" x2="352" y2="352" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4FD1C5"/>
+      <stop offset="1" stop-color="#2A8E86"/>
+    </linearGradient>
+    <filter id="softShadow" x="46" y="54" width="420" height="410" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#080A12" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#11141D"/>
+  <path d="M108 374C108 263.543 197.543 174 308 174H404V404H108V374Z" fill="#181D29"/>
+  <path d="M256 72L424 164H88L256 72Z" fill="url(#kernel)" filter="url(#softShadow)"/>
+  <path d="M128 182H384" stroke="#F5E6C5" stroke-width="18" stroke-linecap="round"/>
+  <path d="M132 392H380" stroke="#F5E6C5" stroke-width="18" stroke-linecap="round"/>
+
+  <path d="M166 218V348" stroke="#D6A84F" stroke-width="24" stroke-linecap="round"/>
+  <path d="M226 218V348" stroke="#D6A84F" stroke-width="24" stroke-linecap="round"/>
+  <path d="M286 218V348" stroke="#D6A84F" stroke-width="24" stroke-linecap="round"/>
+  <path d="M346 218V348" stroke="#D6A84F" stroke-width="24" stroke-linecap="round"/>
+
+  <path d="M256 150V358" stroke="#F5E6C5" stroke-width="10" stroke-linecap="round"/>
+  <path d="M196 286H316" stroke="#F5E6C5" stroke-width="10" stroke-linecap="round"/>
+  <path d="M256 214L196 286L256 358L316 286L256 214Z" fill="#151923" stroke="url(#signal)" stroke-width="14" stroke-linejoin="round"/>
+
+  <circle cx="256" cy="214" r="20" fill="#F5E6C5"/>
+  <circle cx="196" cy="286" r="18" fill="#4FD1C5"/>
+  <circle cx="316" cy="286" r="18" fill="#4FD1C5"/>
+  <circle cx="256" cy="358" r="20" fill="#D4574A"/>
+  <circle cx="256" cy="214" r="8" fill="#11141D"/>
+  <circle cx="256" cy="358" r="8" fill="#11141D"/>
+</svg>
