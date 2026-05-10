@@ -29,16 +29,128 @@ Multi-agent virtual office built on the Pantheon kernel.
 - **multi-agents** = specialists with their own MEMORY, spawned by main
 - **sub-agents** = ephemeral workers (no memory), spawned via Task tool for one-off jobs
 
-## Hard rules
+## How it works (plain English)
 
-1. Speak root's preferred language. Match technical depth on demand.
+### The four files per agent
+Every agent is described by 4 files. Read them in this order to understand any agent:
+- **AGENT.md** — who I am (identity, role, personality)
+- **SKILL.md** — what I can do (tools and step-by-step procedures)
+- **POLICY.md** — what I'm allowed to do (permission levels for every action)
+- **MEMORY.md** — what I've done (experience log, decisions, facts learned)
+
+### Sheridan levels (L1–L4) — when does main ask permission?
+
+Every action gets a level. The riskier or more irreversible, the higher the level.
+
+| Level | What it means | Example |
+|---|---|---|
+| **L1** | Do it, then tell you | Append to own MEMORY, normal conversation |
+| **L2** | Propose a plan first | Multi-agent delegation, ingest from `shared/import/` |
+| **L3** | Explicit confirmation required (show diff) | Edit a system file, compact MEMORY, import an agent |
+| **L4** | Forbidden — you do it yourself | Send email/Slack as you, delete an agent, write another agent's MEMORY |
+
+main states the level briefly when it's L2 or higher.
+
+### How memory works
+
+Each agent keeps its own MEMORY — like a personal diary of what happened, what was decided, and what it learned about you. Three things to know:
+
+1. **Each agent owns its own MEMORY.** Nobody edits another agent's MEMORY (not even main). When main delegates work to a specialist, both keep parallel records — main logs the delegation, the specialist logs the work.
+2. **Only meaningful stuff is logged.** Not every clarifying question. Just L2+ actions, key decisions, completed tasks, new facts about you.
+3. **No autonomous cleanup.** When MEMORY grows (>50KB, >50 entries, or last compaction >30 days ago), main flags it in the morning greeting. You say go; main shows the diff and compacts. Older entries get archived to `agents/<name>/files/memory-archive/`.
+
+**Long reflections from you** (strategic thinking, planning) are stored two ways: a structured summary inside MEMORY, plus the raw verbatim text in `agents/<name>/files/verbatim/<date>.md`. Verbatim files are never touched by compaction.
+
+**Sensitive stuff** (passwords, IDs, secrets) is never written to MEMORY.
+
+### How shared knowledge works (`shared/`)
+
+`shared/` holds anything multiple agents need — facts, rules, your identity — so it stays consistent across the system. Two tiers:
+
+**Always loaded (Tier 0)** — small, every agent sees it on bootstrap:
+- `shared/INDEX.md` — catalog of everything in `shared/`
+- `shared/user-profile.md` — who you are, how to address you, language preferences
+- `shared/conventions.md` — project rules (file naming, dates, markdown style, git)
+
+**Loaded when relevant (Tier 1)** — bigger, only loaded when the topic comes up:
+- `shared/truth/team.md` — team roster
+- `shared/truth/glossary.md` — acronyms, codenames, internal terms
+- `shared/truth/projects.md` — active projects
+- `shared/truth/sources/` — verbatim originals (PDFs, transcripts) after main ingests them
+
+**Drop folders for you to use:**
+- `shared/import/` — drop a document you want main to process. Then say *"main, ดู `shared/import/<file>` ให้หน่อย"*. main extracts the structured facts into `truth/*.md`, moves the original to `truth/sources/`, deletes the file from `import/`.
+- `shared/assets/` — drop binary files (photos, logos, diagrams) manually. Then say *"main, index รูปนี้"*. main appends a row to `shared/assets/INDEX.md`. main never generates or moves binaries on its own — that's your job.
+
+**The simple decision rule:** *"Does another agent need to know this?"* — yes → `shared/`, no → that agent's MEMORY.
+
+### How agents talk to each other
+
+main is the only AI you talk to by default. When main needs a specialist's help, it spawns the specialist via the Task tool — an in-process call/return. No file-based mailboxes between agents.
+
+Every spawn follows the same contract:
+
+- main passes the target's full context (its 4 files), the task, a **DEADLINE** (default 5 minutes), and `EXPECTED_OUTPUT_FILE` if a file is expected.
+- The specialist works, then returns a result ending with a status block:
+  ```
+  STATUS: ok | partial | failed
+  ERROR_TYPE: auth_error | source_unreachable | parse_error | policy_block | internal_error | timeout | other
+  REASON: <one short line if not ok>
+  ```
+- main **verifies the output** — opens the expected file, checks it exists and is non-empty. If verification fails, the result is treated as `failed` regardless of what the specialist claimed.
+- **Retry policy depends on `ERROR_TYPE`:**
+  - Transient (`source_unreachable`, `timeout`, `internal_error`) → retry once
+  - Auth / policy / parse errors → escalate to you immediately (retry won't help)
+  - `STATUS: partial` → no retry; you decide whether to continue
+  - Max 2 spawns of the same prompt regardless
+
+If the specialist gets stuck mid-task and needs main's input, it ends with:
+```
+MAIN_QUERY: <question>
+PARTIAL_RESULT: <what's done so far>
+```
+main answers, re-spawns the specialist with the answer + partial result, and the work continues. Cap: 3 round-trips per single delegation.
+
+> **Background:** This contract descends from an older file-based "ACP" protocol. The file-based transport was dropped (Task tool replaces it), but the status codes, deadline, error taxonomy, and verification survived — because each one prevents a real failure mode (silent corruption, runaway tasks, blind retries).
+
+### Direct Mode — talking to a specialist directly
+
+Default flow: you ↔ main only. If you want low-latency back-and-forth with a specialist (e.g., a research agent during a deep investigation), open Direct Mode:
+
+- **Open:** `/connect <agent>` (or `main เริ่ม <agent>`)
+- **Close:** `/back` — the specialist writes a session summary to its MEMORY, main reads the tail and gives you a recap
+
+While in Direct Mode:
+- The specialist talks to you directly. All actions log to that specialist's MEMORY.
+- System-level requests (rule changes, spawning new agents) bounce back: *"That requires main — say `/back` first."*
+
+State is tracked in `agents/main/files/.direct-mode-state.json`. If a session crashes mid-Direct-Mode and the state file is older than 24 hours, main resets it on next bootstrap and warns you (no auto-resume).
+
+### Two hats for main
+
+main has two modes:
+- **Operating hat** (default) — runs work, delegates, manages day-to-day
+- **Design hat** — helps you design / edit the system itself (add agents, change rules, export/import blueprints)
+
+Switch with `main design` (or `/design`) and `main exit design` (or `/operate`). Check current hat with `/status`.
+
+System file edits and creating new agents require Design hat — main will refuse them in Operating hat with a hint to switch.
+
+---
+
+## Hard rules (always-on, override anything)
+
+1. Speak root's preferred language ({{LANGUAGE}}). Match technical depth on demand.
 2. Classify every action by Sheridan L1/L2/L3/L4 before executing.
-3. Never modify another agent's MEMORY (L4).
-4. Never act as root toward externals. Drafts OK; root sends.
-5. Append meaningful actions to own MEMORY before replying.
-6. Use Task tool for inter-agent work — no file inbox/outbox.
-7. Confirm before mutating system files.
-8. Single-branch convention.
+3. Single writer per MEMORY — only the owning agent writes its own MEMORY; sub-agents never write any MEMORY.
+4. Never act as root toward externals (email, Slack, calendar invites, social posts). Drafts OK; root sends.
+5. Append meaningful actions to own MEMORY before replying. (Meaningful = L2+, decisions, root facts, completed tasks.)
+6. Use the Task tool for inter-agent work — no file-based inbox/outbox.
+7. Single Gateway — only main talks to root by default; Direct Mode is the opt-in exception.
+8. Confirm before mutating system files (README, any AGENT/SKILL/POLICY). Show diff first.
+9. Verbatim Reference Pattern — root reflections kept as summary in MEMORY + raw text in `agents/<name>/files/verbatim/`.
+10. Single-branch convention — work on the `main` git branch only.
+11. Data placement rule — facts other agents need go in `shared/`; per-agent experience goes in that agent's MEMORY.
 
 ## Export / Import agents (cross-workspace portability)
 
