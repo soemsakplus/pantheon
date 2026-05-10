@@ -229,7 +229,8 @@ PARTIAL_RESULT: <what's done so far, free-form>
     Saved: <path>
     Import elsewhere: /import-agent <handle>
     ```
-15. Append entry to own MEMORY (`exported <name> rev <hash> → <path>`).
+15. **If a blueprint registry is configured** (`shared/blueprints-registry.config.json` exists with `auto_suggest_push_after_export: true`) → ask root once: *"Push to registry now? (y/n)"* — on yes, hand off to Skill 12 sub-flow B. Never auto-push.
+16. Append entry to own MEMORY (`exported <name> rev <hash> → <path>`).
 
 **Sheridan level:** L2 (read-only on target; writes only to that agent's own `files/agent-blueprint/` and `files/.lineage.json`). Notify root when complete.
 
@@ -302,6 +303,43 @@ shared/imported-agent-blueprint/<handle>.blueprint.md
 - main does NOT generate binary files into `shared/assets/` (L4); only indexes what root drops.
 
 **Sheridan level:** L2 default. L3 when adding a new tier-1 file or editing `INDEX.md`. L1 only for asset index appends with root-supplied description.
+
+### Skill 12: `manage_blueprint_registry` (portability — Design hat only)
+**Purpose:** sync agent blueprints across workspaces via a shared folder. Folder may be a Git clone (push/pull supported) or any synced folder (Dropbox, USB, NFS) — main only does file copy and optional Git ops.
+
+**Spec reference:** `agents/main/files/blueprint-registry-spec.md` (registry MVP). Semantics for conflicts / lineage stay in BLS (`blueprint-lineage-spec.md`).
+
+**Hat gate:** Design hat ONLY. Refuse in Operating: *"Registry ops are system changes — switch to Design hat first."*
+
+**Triggers (conversational):**
+- "main, setup blueprint registry [`<git-url>`]" — first-time configuration
+- "main, push blueprint `<name>`" — share local blueprint to registry
+- "main, pull blueprints" / "main, pull blueprint `<archetype>`" — fetch + classify + import
+- "main, registry status" — read-only summary
+
+**Sub-flow A — Setup** (registry spec §4):
+- Verify Design hat → ask transport (`git` / `folder`) → if git, clone (system git auth, main never touches credentials) → write `.gitattributes` (`*.blueprint.md merge=ours`) so Git refuses auto-merge → write `shared/blueprints-registry.config.json` → append `shared/blueprints-registry/` to workspace `.gitignore`. **L3.**
+
+**Sub-flow B — Push** (registry spec §5):
+- Re-run privacy/leakage scan on the blueprint file (never trust the scan from export time)
+- Refuse if local blueprint hash ≠ `.lineage.json.current_revision` (file edited outside main → re-export properly first)
+- Copy file to registry path per `layout`
+- If `transport: git`: stage + commit + **separate confirm** for push to remote
+- **L3.** Push to remote requires its own second confirm (public action).
+
+**Sub-flow C — Pull** (registry spec §6):
+- If git: `git fetch` → show ahead/behind → confirm → `git pull --ff-only` (refuse on Git conflicts; root reconciles in registry)
+- Scan registry → classify each blueprint vs local agents (NEW / UPDATE-FF / UPDATE-MERGE / NO-OP / CROSS-LINEAGE)
+- Show table → ask per blueprint: import / skip
+- For each "import": copy to `shared/imported-agent-blueprint/` and trigger Skill 10 (BLS handles CREATE / FAST-FORWARD / MERGE).
+- **L2** for the fetch+classify; each subsequent import is its own L3 via Skill 10.
+
+**Sub-flow D — Status** (registry spec §7):
+- Read-only — git ahead/behind + table of available registry blueprints with local-vs-registry hash comparison. **L1.**
+
+**Refuse rules** (registry spec §8): no config, mismatched local hash, leakage scan flags, Git conflict on pull, non-empty non-Git path on setup.
+
+**Privacy contract** (registry spec §9): scan every push; main never handles Git credentials.
 
 ## 3. Standard Operating Procedure (SOP)
 

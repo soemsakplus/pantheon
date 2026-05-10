@@ -316,6 +316,76 @@ You can tell at a glance whether two blueprints belong to the same family — sa
 
 > Authoritative spec: [`agents/main/files/blueprint-lineage-spec.md`](agents/main/files/blueprint-lineage-spec.md). main reads it during every export and import.
 
+### Blueprint registry — sharing blueprints across workspaces
+
+The registry is a **folder** that holds blueprints, shared between your workspaces by whatever transport you like (Git, Dropbox, iCloud, USB stick, NFS — anything). main provides convenience commands for `git`-backed registries (push / pull / status); for non-Git transports, the same commands degrade to plain file copy and root keeps the folder synced themselves.
+
+**Setup once per workspace:**
+
+```
+main, setup blueprint registry git@github.com:you/pantheon-blueprints.git
+```
+
+What main does:
+- Asks transport (`git` or `folder`).
+- For `git`: clones into `shared/blueprints-registry/` using your system Git auth (SSH keys, `gh auth`, etc. — main never handles credentials).
+- Writes `.gitattributes` inside the clone with `*.blueprint.md merge=ours` — Git refuses to auto-merge blueprints. **Conflicts always go through BLS merge in main, never Git's text merger** (which would silently corrupt the structure).
+- Writes `shared/blueprints-registry.config.json` (transport, path, branch, layout).
+- Adds `shared/blueprints-registry/` to your workspace's `.gitignore` (it is its own Git repo, must not be nested).
+
+**Push a blueprint:**
+
+```
+main, push blueprint research
+```
+
+main re-runs the privacy/leakage scan (never trusts the scan from export time), copies the file into the registry path, commits with a descriptive message, then asks **a separate confirm** before `git push` — pushing publicly is a deliberate action, not a side effect.
+
+**After every `/export-agent`** main also asks once: *"Push to registry now? (y/n)"* — never auto-pushes. Disable this prompt by setting `auto_suggest_push_after_export: false` in the config.
+
+**Pull updates:**
+
+```
+main, pull blueprints
+```
+
+main `git fetch`es, shows ahead/behind, asks before `git pull --ff-only`, then scans the registry and classifies every blueprint against your local agents:
+
+| Class | Meaning |
+|---|---|
+| **NEW** | Registry has an agent you don't have locally — CREATE candidate |
+| **UPDATE-FF** | Same lineage, registry revision is newer than local — fast-forward candidate |
+| **UPDATE-MERGE** | Same lineage, both diverged — merge candidate (interactive) |
+| **NO-OP** | Already at this revision (or older) — nothing to do |
+| **CROSS-LINEAGE** | Same archetype name but different `lineage_id` — REJECT (offers rename-as-new) |
+
+You pick which to import. Each import flows through the existing BLS path (Skill 10) — so you get the same CREATE / FAST-FORWARD / MERGE handling whether the blueprint came from a manual drop or from the registry.
+
+**Registry status (read-only):**
+
+```
+main, registry status
+```
+
+Shows: ahead/behind counts, which registry blueprints are newer than your local agents, which are available to install.
+
+**Refuse rules**
+
+- Push is refused if the local blueprint's content hash doesn't match `.lineage.json.current_revision` (i.e., someone edited the file outside main's export). Re-export properly first.
+- Push is refused if the privacy scan flags any leakage.
+- Pull `git pull --ff-only` refuses on Git conflicts in the registry — root reconciles in the registry directly (it is their Git repo) before retrying.
+- Setup refuses on a non-empty, non-Git path — pick a fresh location.
+- main never touches Git credentials, never edits remotes, never runs Git ops outside the registry path.
+
+**Why this design**
+
+- **Transport-agnostic** — the registry is "just a folder". Git is the most common backend; Dropbox / iCloud / USB / NFS all work too.
+- **BLS owns semantics, registry owns transport.** `.gitattributes merge=ours` ensures Git stays out of the way at conflict time.
+- **Public actions are explicit.** Push to remote requires a second confirm (separate from the local commit confirm). Privacy scan re-runs on every push.
+- **No auto-sync.** Bootstrap doesn't pull. Export doesn't auto-push. All registry ops are root-triggered.
+
+> Authoritative spec: [`agents/main/files/blueprint-registry-spec.md`](agents/main/files/blueprint-registry-spec.md). MVP supports one registry per workspace; multi-registry deferred until needed.
+
 ## Re-export the kernel
 
 In Design hat, type `root export pantheon kernel` → main regenerates `installer/artifacts/` + `PANTHEON-INSTALL.md`, stripping personal data, ready for someone else to clone.
