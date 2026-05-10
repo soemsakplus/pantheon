@@ -108,7 +108,6 @@ cd my-pantheon
 # option B — local copy (no git history)
 cp -R /path/to/pantheon /path/to/my-pantheon
 cd /path/to/my-pantheon
-find . -name .DS_Store -delete   # macOS noise
 ```
 
 ### 2. Open Claude Code
@@ -200,7 +199,6 @@ This repo is the kernel — improvements here propagate to every new pantheon. G
 ```bash
 cp -R . /tmp/pantheon-test
 cd /tmp/pantheon-test
-find . -name .DS_Store -delete
 claude
 ```
 
