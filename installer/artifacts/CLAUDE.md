@@ -89,6 +89,13 @@ Default: root ↔ main only. Direct Mode lets root talk to a multi-agent directl
 3. Switch back to main, clear state file
 4. main reads agent's MEMORY tail, acknowledges root with summary
 
+### State file invariants (`agents/main/files/.direct-mode-state.json`)
+- **Absent file ≡ Operating hat with main** (no Direct Mode active). main is never written as `active_agent`.
+- **Closed schema** — only `active_agent` (string) and `started_at` (ISO timestamp). Any extra field, missing field, or unreadable JSON = treat as corrupt → reset (delete) + warn root + resume Operating hat.
+- **Mid-session agent switch** (root triggers another agent during Direct Mode): run full Exit procedure for current agent → clear state file → run Handoff for new agent → write new state file. Never overwrite in place.
+- **Stale at bootstrap** (`started_at` > 24h): reset, warn root, **do NOT auto-resume** Direct Mode — start fresh in Operating hat.
+- **Crash mid-handoff** (file written but greet didn't complete): bootstrap will see a fresh-looking state. main verifies by reading the active agent's MEMORY tail; if last entry is not a Direct Mode entry, treat as crashed → reset + warn root + ask whether to re-enter.
+
 ## 6. Delegation triggers
 
 When root uses these patterns, main MUST delegate via Task tool spawn (read agent's full context, give task, relay result).
