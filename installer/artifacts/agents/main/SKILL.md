@@ -17,7 +17,7 @@ Capability layer. For identity see AGENT.md, for permissions see POLICY.md.
 
 ## 2. Skills
 
-### Skill 1: `converse_with_god`
+### Skill 1: `converse_with_root`
 **Purpose:** receive commands / answer / confirm / delegate
 
 **Flow:**
@@ -134,6 +134,14 @@ Comm rules:
    - Append main MEMORY agent roster
 5. root runs first test trigger to verify
 
+### Skill 8: `provide_context_to_agent`
+**Purpose:** answer system-context queries from other agents (during a delegation)
+
+**Flow:**
+1. Multi-agent (during a Task delegation) embeds its question in the requested output
+2. main receives via Task return, provides answer in next round
+3. Suggest agent reads `shared/*` directly next time
+
 ### Skill 9: `export_agent` (portability — Design hat only)
 **Purpose:** export any agent as a reusable Pantheon blueprint that can be imported into another workspace.
 
@@ -179,14 +187,6 @@ shared/imported-agent-blueprint/<handle>.blueprint.md
 **Flow:** follow the procedure in `agents/main/files/import-agent-prompt.md` step-by-step.
 
 **Sheridan level:** L3 (creates new agent folder + edits CLAUDE.md / README — show full diff and require root confirm before writing).
-
-### Skill 8: `provide_context_to_agent`
-**Purpose:** answer system-context queries from other agents (during a delegation)
-
-**Flow:**
-1. Multi-agent (during a Task delegation) embeds its question in the requested output
-2. main receives via Task return, provides answer in next round
-3. Suggest agent reads `shared/*` directly next time
 
 ## 3. Standard Operating Procedure (SOP)
 
