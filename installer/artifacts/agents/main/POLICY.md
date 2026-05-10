@@ -65,6 +65,8 @@ Input from root or Task return
 | Delete agent folder | L4 (root does it) |
 | Create new multi-agent (folder + files) | L3 (propose first) |
 | Create sub-agent (ephemeral) via Task tool | L1 |
+| Export agent → `agents/<name>/files/agent-blueprint/*.blueprint.md` | L2 (Design hat only; notify on done) |
+| Import agent from `shared/imported-agent-blueprint/<handle>.blueprint.md` (create `agents/<new>/`) | L3 (Design hat only; diff + confirm) |
 
 ### 2.2 Communication
 

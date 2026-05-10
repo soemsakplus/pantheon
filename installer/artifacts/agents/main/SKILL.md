@@ -134,6 +134,52 @@ Comm rules:
    - Append main MEMORY agent roster
 5. root runs first test trigger to verify
 
+### Skill 9: `export_agent` (portability — Design hat only)
+**Purpose:** export any agent as a reusable Pantheon blueprint that can be imported into another workspace.
+
+**Triggers:** `main export agent <name>` | `/export-agent <name>` | `main เอเจนต์ออก <name>`
+
+**Hat gate:** Design hat ONLY. If invoked in Operating hat, refuse and tell root: *"Export is a system change — switch to Design hat first (`main design` or `/design`)."*
+
+**Flow:**
+1. Verify Design hat. Otherwise refuse per gate above.
+2. Resolve `<name>` → `agents/<name>/`. If missing, list roster and ask.
+3. Read all 4 files: `agents/<name>/{AGENT,SKILL,POLICY,MEMORY}.md`.
+4. Read the verbatim export prompt from `agents/main/files/export-agent-prompt.md`.
+5. Run the export against the target agent:
+   - If `<name>` == `main` → introspect directly with the prompt.
+   - Else → spawn a sub-agent via Task tool, feed it: target's full 4 files + the export prompt + instruction "you are now <name>; output the blueprint and nothing else".
+6. Validate the returned blueprint: must contain both `===PANTHEON-BLUEPRINT-START===` and `===PANTHEON-BLUEPRINT-END===` plus all 4 section delimiters. Reject and retry once on failure.
+7. Parse the meta block to extract `blueprint_name` (the archetype, e.g. `research-analyst`) and `blueprint_version` (e.g. `1.0.0`).
+8. Build the filename: `<archetype>.v<version-with-dashes>.blueprint.md`
+   - Convert dots in version → dashes: `1.0.0` → `v1-0-0`
+   - Example: `research-analyst.v1-0-0.blueprint.md`
+9. Scan output for project-specific leakage (root's real name, addresses, URLs, project codenames). If found, flag to root before saving.
+10. Ensure the per-agent blueprint folder exists: `agents/<name>/files/agent-blueprint/` (create if missing).
+11. Save to `agents/<name>/files/agent-blueprint/<archetype>.v<version>.blueprint.md`. If a file with the same name exists, ask root: overwrite, or bump version.
+12. Reply to root with the saved file path and the corresponding import command for the destination workspace:
+    `/import-agent <archetype>.v<version>` (after dropping the file in `shared/imported-agent-blueprint/` there).
+13. Append entry to own MEMORY (`exported <name> → <path>`).
+
+**Sheridan level:** L2 (read-only on target; writes only to the target agent's own `files/agent-blueprint/`). Notify root when complete.
+
+### Skill 10: `import_agent` (portability — Design hat only)
+**Purpose:** install an exported Pantheon blueprint as a new agent in this workspace.
+
+**Triggers:** `main import agent <handle>` | `/import-agent <handle>` | `main นำเข้าเอเจนต์ <handle>`
+
+where `<handle>` is the bare blueprint identifier `<archetype>.v<version>` (e.g. `research-analyst.v1-0-0`). The actual file must already be present at:
+
+```
+shared/imported-agent-blueprint/<handle>.blueprint.md
+```
+
+**Hat gate:** Design hat ONLY. If invoked in Operating hat, refuse and tell root: *"Import creates a new agent — switch to Design hat first (`main design` or `/design`)."*
+
+**Flow:** follow the procedure in `agents/main/files/import-agent-prompt.md` step-by-step.
+
+**Sheridan level:** L3 (creates new agent folder + edits CLAUDE.md / README — show full diff and require root confirm before writing).
+
 ### Skill 8: `provide_context_to_agent`
 **Purpose:** answer system-context queries from other agents (during a delegation)
 
