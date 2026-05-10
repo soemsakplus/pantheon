@@ -142,12 +142,38 @@ After cleanup, repo root should look like:
 
 ```
 .
+├── .pantheon-kernel-version      # KUS state (created in Phase 4.4)
 ├── PANTHEON-INSTALL.md
-├── CLAUDE.md                    # post-install version
+├── CLAUDE.md                     # post-install version
 ├── README.md
-├── .claude/commands/            # 9 slash commands
-├── agents/main/                 # 4 files + files/memory-archive/.gitkeep
-└── shared/                      # user-profile.md + conventions.md
+├── .claude/
+│   └── commands/                 # 13 slash commands
+├── agents/
+│   └── main/
+│       ├── AGENT.md
+│       ├── SKILL.md
+│       ├── POLICY.md
+│       ├── MEMORY.md
+│       └── files/
+│           ├── memory-archive/.gitkeep
+│           ├── export-agent-prompt.md
+│           ├── import-agent-prompt.md
+│           ├── blueprint-lineage-spec.md
+│           ├── blueprint-registry-spec.md
+│           └── kernel-update-spec.md
+└── shared/
+    ├── INDEX.md                  # knowledge catalog (Tier 0)
+    ├── user-profile.md           # root identity (Tier 0)
+    ├── conventions.md            # project rules (Tier 0)
+    ├── truth/                    # source of truth (Tier 1, lazy-loaded)
+    │   ├── team.md
+    │   ├── glossary.md
+    │   ├── projects.md
+    │   └── sources/.gitkeep
+    ├── import/.gitkeep           # drop zone for ingest
+    ├── assets/                   # binary asset drop zone
+    │   └── INDEX.md
+    └── imported-agent-blueprint/ # blueprint drop zone for /import-agent
 ```
 
 (no `installer/` anymore)
