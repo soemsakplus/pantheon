@@ -3,7 +3,14 @@
 > Used by `main` Skill 9 (`export_agent`). When the export skill runs, send the
 > prompt below **verbatim** to the agent being exported (after loading its full
 > 4-file context: AGENT.md, SKILL.md, POLICY.md, MEMORY.md). The agent
-> introspects against this prompt and returns the blueprint.
+> introspects against this prompt and returns a draft blueprint.
+>
+> **Lineage fields (`blueprint_format`, `lineage_id`, `revision_hash`,
+> `revision_history`) are added by main AFTER the agent returns the draft** —
+> they are workspace state, not agent self-knowledge. See
+> `blueprint-lineage-spec.md` for the BLS spec. The agent's job is to
+> produce content (4 sections) + the "human" meta fields (name, version,
+> description, default name).
 
 ---
 

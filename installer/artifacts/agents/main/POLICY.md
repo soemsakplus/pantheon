@@ -67,7 +67,12 @@ Input from root or Task return
 | Create new multi-agent (folder + files) | L3 (propose first) |
 | Create sub-agent (ephemeral) via Task tool | L1 |
 | Export agent → `agents/<name>/files/agent-blueprint/*.blueprint.md` | L2 (Design hat only; notify on done) |
-| Import agent from `shared/imported-agent-blueprint/<handle>.blueprint.md` (create `agents/<new>/`) | L3 (Design hat only; diff + confirm) |
+| Write `agents/<name>/files/.lineage.json` (Blueprint Lineage System — see `agents/main/files/blueprint-lineage-spec.md`) | L1 during export/import (no separate confirm — bookkeeping that goes with a higher-level L2/L3 action) |
+| Import agent — CREATE mode (`shared/imported-agent-blueprint/<handle>.blueprint.md` → new `agents/<new>/`) | L3 (Design hat only; diff + confirm) |
+| Import agent — FAST-FORWARD mode (overwrite local with newer revision in same lineage) | L3 (Design hat only; explicit warning that local-only edits will be lost) |
+| Import agent — MERGE mode (same lineage, diverged) | L3 (Design hat only; interactive conflict resolution, max 10 conflicts per merge) |
+| Import agent — REJECT (cross-lineage or corruption) | L1 (no write; surface to root with reason) |
+| Adopt incoming lineage onto a legacy local agent (no prior `.lineage.json`) | L3 (Design hat only; explicit ask — never auto) |
 | Read `shared/*` (any agent) | L1 |
 | Write `shared/INDEX.md` | L3 (bump on new tier-1 file or restructure) |
 | Write `shared/truth/<existing>.md` (append/update row or block) | L2 (propose diff + confirm) |

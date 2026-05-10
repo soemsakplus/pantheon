@@ -253,6 +253,69 @@ What main does (full procedure in `agents/main/files/import-agent-prompt.md`):
 - **Filename is load-bearing.** The `<archetype>.v<version>.blueprint.md` shape is
   how the importer locates and identifies blueprints — don't rename ad-hoc.
 
+### Blueprint Lineage System (BLS) — when two workspaces evolve the same agent
+
+The first time you export an agent, main mints a permanent **lineage ID** (a UUID) and starts a **revision history** (chained content hashes). Both travel inside every blueprint. They live on disk at `agents/<name>/files/.lineage.json`.
+
+What this buys you:
+
+- **`/import-agent` is no longer always "create new".** main detects what relationship the incoming blueprint has to your local agent and picks the right mode automatically — CREATE, FAST-FORWARD, MERGE, or REJECT.
+- **You can update an agent in-place across workspaces.** Workspace A exports `v1-2-0`, workspace B already has the same agent at an older revision in the same lineage → import fast-forwards.
+- **You can merge divergent forks.** Both workspaces edited the agent independently after a common ancestor → main runs a section-level 3-way merge, asks you to resolve only the real conflicts, then writes a new merge revision whose history records both parents.
+- **Cross-lineage merges are forbidden.** If two agents share an archetype name but were minted independently (different `lineage_id`), main refuses to merge and offers to import as a new agent under a different name. This prevents accidentally fusing unrelated agents.
+
+#### How main decides what to do at import time
+
+| Local state at this name | Incoming blueprint | What happens |
+|---|---|---|
+| Doesn't exist | any | **CREATE** — scaffold + seed lineage |
+| Legacy (no `.lineage.json`) | legacy (format 1.x) | Ask: rename / overwrite / abort |
+| Legacy | modern (format 2.0) | Ask: rename / adopt incoming lineage and overwrite / abort |
+| Has lineage, different `lineage_id` | modern | **REJECT** — offer rename-as-new |
+| Has lineage, incoming hash already in local history | modern | **NO-OP** — already up to date (or older) |
+| Has lineage, local hash is in incoming history (incoming is newer) | modern | **FAST-FORWARD** — overwrite, extend history |
+| Has lineage, both diverged from a common ancestor | modern | **MERGE** — interactive 3-way |
+
+#### Merge mechanics
+
+main parses each file (AGENT/SKILL/POLICY — never MEMORY) into sections by markdown heading, classifies each section as no-change / one-side-changed / both-changed, and then walks you through only the real conflicts:
+
+```
+CONFLICT — SKILL.md §Skill 5: review_drafts
+--- ancestor (revision 1111aaaa) ---
+…
+--- local (revision 2222bbbb) ---
+…
+--- incoming (revision 6666cccc) ---
+…
+Choose: (a) keep local (b) take incoming (c) edit manually (paste new content) (d) abort merge
+```
+
+- Sections only one side touched are auto-merged (no question asked).
+- Cap: 10 conflicts per merge attempt — if you exceed, main suggests breaking the merge into smaller passes.
+- Merge result becomes a new revision whose `revision_history` records both parents — so future workspaces can fast-forward off it.
+
+#### What main reports
+
+After every export / import / merge:
+
+```
+Lineage: l-7a3f9c12  (full: 7a3f9c12-4e8b-4a01-9f3c-2d7e1a8b9c4d)
+Revision: a3f9c1b2   (history: 1111aaaa → 2222bbbb → a3f9c1b2)
+Mode: CREATE | FAST-FORWARD | MERGE | NO-OP
+Saved: agents/<name>/
+```
+
+You can tell at a glance whether two blueprints belong to the same family — same `Lineage:` short id = mergeable, different = not.
+
+#### Backward compatibility
+
+- Blueprints exported before BLS (no `blueprint_format` / no lineage fields) still import — they go through CREATE mode only and pick up a fresh lineage on import.
+- Local agents created before BLS have no `.lineage.json` yet. The first time you export or merge them, main creates one (treating the current state as a new genesis OR offering to adopt an incoming lineage — your choice).
+- Re-exporting an agent whose content didn't actually change is **refused** to keep history clean.
+
+> Authoritative spec: [`agents/main/files/blueprint-lineage-spec.md`](agents/main/files/blueprint-lineage-spec.md). main reads it during every export and import.
+
 ## Re-export the kernel
 
 In Design hat, type `root export pantheon kernel` → main regenerates `installer/artifacts/` + `PANTHEON-INSTALL.md`, stripping personal data, ready for someone else to clone.

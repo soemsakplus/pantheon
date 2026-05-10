@@ -185,27 +185,53 @@ PARTIAL_RESULT: <what's done so far, free-form>
 
 **Hat gate:** Design hat ONLY. If invoked in Operating hat, refuse and tell root: *"Export is a system change — switch to Design hat first (`main design` or `/design`)."*
 
+**Spec reference:** Blueprint Lineage System — `agents/main/files/blueprint-lineage-spec.md` (BLS). The flow below is the orchestration; BLS is the contract.
+
 **Flow:**
 1. Verify Design hat. Otherwise refuse per gate above.
 2. Resolve `<name>` → `agents/<name>/`. If missing, list roster and ask.
 3. Read all 4 files: `agents/<name>/{AGENT,SKILL,POLICY,MEMORY}.md`.
 4. Read the verbatim export prompt from `agents/main/files/export-agent-prompt.md`.
-5. Run the export against the target agent:
+5. **Run the agent introspection:**
    - If `<name>` == `main` → introspect directly with the prompt.
-   - Else → spawn a sub-agent via Task tool, feed it: target's full 4 files + the export prompt + instruction "you are now <name>; output the blueprint and nothing else".
-6. Validate the returned blueprint: must contain both `===PANTHEON-BLUEPRINT-START===` and `===PANTHEON-BLUEPRINT-END===` plus all 4 section delimiters. Reject and retry once on failure.
-7. Parse the meta block to extract `blueprint_name` (the archetype, e.g. `research-analyst`) and `blueprint_version` (e.g. `1.0.0`).
-8. Build the filename: `<archetype>.v<version-with-dashes>.blueprint.md`
-   - Convert dots in version → dashes: `1.0.0` → `v1-0-0`
-   - Example: `research-analyst.v1-0-0.blueprint.md`
-9. Scan output for project-specific leakage (root's real name, addresses, URLs, project codenames). If found, flag to root before saving.
-10. Ensure the per-agent blueprint folder exists: `agents/<name>/files/agent-blueprint/` (create if missing).
-11. Save to `agents/<name>/files/agent-blueprint/<archetype>.v<version>.blueprint.md`. If a file with the same name exists, ask root: overwrite, or bump version.
-12. Reply to root with the saved file path and the corresponding import command for the destination workspace:
-    `/import-agent <archetype>.v<version>` (after dropping the file in `shared/imported-agent-blueprint/` there).
-13. Append entry to own MEMORY (`exported <name> → <path>`).
+   - Else → spawn a sub-agent via Task tool, feed it: target's full 4 files + the export prompt + instruction "you are now <name>; output the blueprint draft and nothing else".
+6. Validate the draft: must contain both `===PANTHEON-BLUEPRINT-START===` / `===PANTHEON-BLUEPRINT-END===` and all 4 section delimiters. Reject and retry once on failure.
+7. Extract draft meta (`blueprint_name`, `blueprint_version`, `source_description`, `recommended_default_name`) and the 4 section bodies.
+8. **Lineage handling (BLS §5):**
+   - Read `agents/<name>/files/.lineage.json` if present.
+   - Compute `revision_hash` from canonicalized 4-section content (BLS §3 — exclude MEMORY, exclude version tables, etc.).
+   - **If `.lineage.json` exists AND `current_revision == new revision_hash`** → **REFUSE export**: *"Content unchanged since last revision (`<hash>`). Re-export rejected to keep history clean."*
+   - **If `.lineage.json` exists** → reuse `lineage_id`, append new hash to `revision_history`, set `current_revision`, set `last_export_at = now`.
+   - **If absent (first-ever export)** → generate UUID v4 as `lineage_id`, set `revision_history = [revision_hash]`, set `current_revision`.
+9. **Assemble final blueprint** with format-2.0 meta:
+   ```
+   blueprint_format: 2.0
+   blueprint_name: <name>
+   blueprint_version: <version>
+   exported_at: <ISO>
+   source_description: <line>
+   recommended_default_name: <suggested>
+   lineage_id: <uuid>
+   revision_hash: <hash>
+   revision_history:
+     - <hash 1>
+     - <hash 2>
+     - ...
+   ```
+10. Build filename: `<archetype>.v<version-with-dashes>.blueprint.md` (dots in version → dashes; e.g. `1.0.0` → `v1-0-0`; example `research-analyst.v1-0-0.blueprint.md`).
+11. Scan output for project-specific leakage (root's real name, URLs, project codenames). Flag to root before saving.
+12. Ensure `agents/<name>/files/agent-blueprint/` exists; save the blueprint there. If same filename exists, ask root: overwrite or bump version.
+13. **Persist `.lineage.json`** with the updated state from step 8.
+14. Report to root using BLS §9 format:
+    ```
+    Lineage: l-<short>  (full: <uuid>)
+    Revision: <new>  (history: <h1> → <h2> → <new>)
+    Saved: <path>
+    Import elsewhere: /import-agent <handle>
+    ```
+15. Append entry to own MEMORY (`exported <name> rev <hash> → <path>`).
 
-**Sheridan level:** L2 (read-only on target; writes only to the target agent's own `files/agent-blueprint/`). Notify root when complete.
+**Sheridan level:** L2 (read-only on target; writes only to that agent's own `files/agent-blueprint/` and `files/.lineage.json`). Notify root when complete.
 
 ### Skill 10: `import_agent` (portability — Design hat only)
 **Purpose:** install an exported Pantheon blueprint as a new agent in this workspace.
@@ -218,11 +244,20 @@ where `<handle>` is the bare blueprint identifier `<archetype>.v<version>` (e.g.
 shared/imported-agent-blueprint/<handle>.blueprint.md
 ```
 
-**Hat gate:** Design hat ONLY. If invoked in Operating hat, refuse and tell root: *"Import creates a new agent — switch to Design hat first (`main design` or `/design`)."*
+**Hat gate:** Design hat ONLY. If invoked in Operating hat, refuse and tell root: *"Import creates or merges agents — switch to Design hat first (`main design` or `/design`)."*
 
-**Flow:** follow the procedure in `agents/main/files/import-agent-prompt.md` step-by-step.
+**Spec reference:** `agents/main/files/blueprint-lineage-spec.md` (BLS — defines lineage / revision / merge rules).
 
-**Sheridan level:** L3 (creates new agent folder + edits CLAUDE.md / README — show full diff and require root confirm before writing).
+**Modes** (decision tree in `import-agent-prompt.md` step 6, full spec in BLS §6):
+- **CREATE** — no local agent at this name → scaffold from blueprint, seed `.lineage.json`.
+- **FAST-FORWARD** — local lineage matches and is older than incoming → overwrite + extend history.
+- **MERGE** — same lineage, both diverged from a common ancestor → section-level 3-way merge (BLS §7), interactive conflict resolution, max 10 conflicts per attempt.
+- **NO-OP** — already up to date or incoming is older.
+- **REJECT** — different lineage (offer rename-as-new); or same lineage with no common ancestor (corruption).
+
+**Flow:** follow `agents/main/files/import-agent-prompt.md` step-by-step. The procedure handles all 5 modes plus legacy (format 1.x) blueprints with the explicit-choice fallback.
+
+**Sheridan level:** L3 for CREATE / FAST-FORWARD / MERGE writes (show full diff + confirm). NO-OP and REJECT need no write. Merge resolution is interactive (per-conflict prompts to root).
 
 ### Skill 11: `manage_shared_knowledge`
 **Purpose:** maintain `shared/` as the cross-agent knowledge layer. main is the librarian — Tier 0 (always-loaded summary), Tier 1 (lazy source of truth), and the asset index. See `shared/INDEX.md` for layout.
